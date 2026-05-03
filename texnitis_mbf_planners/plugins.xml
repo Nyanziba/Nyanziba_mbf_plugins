@@ -1,0 +1,19 @@
+<!--
+  pluginlib registry for texnitis_mbf_planners.
+
+  Class entries are wired up in milestone M3 once the adapter implementations
+  exist. The placeholders below are commented so that pluginlib does not try
+  to load symbols that have not been built yet.
+-->
+<library path="texnitis_mbf_planners">
+  <!--
+  <class type="texnitis_mbf_planners::AStarPlanner"
+         base_class_type="mbf_simple_core::SimplePlanner">
+    <description>A* grid planner backed by texnitis_nav_core.</description>
+  </class>
+  <class type="texnitis_mbf_planners::HeightAwareAStarPlanner"
+         base_class_type="mbf_simple_core::SimplePlanner">
+    <description>Height-aware A* grid planner backed by texnitis_nav_core.</description>
+  </class>
+  -->
+</library>

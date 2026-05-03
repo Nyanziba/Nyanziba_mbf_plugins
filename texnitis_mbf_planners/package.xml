@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>texnitis_mbf_planners</name>
+  <version>0.0.1</version>
+  <description>move_base_flex SimplePlanner adapters that delegate to texnitis_nav_core.</description>
+  <maintainer email="katsuya.honda@oedodynamics.co.jp">Nyanziba</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>mbf_abstract_core</depend>
+  <depend>mbf_simple_core</depend>
+  <depend>mbf_msgs</depend>
+  <depend>mbf_utility</depend>
+  <depend>texnitis_mbf_common</depend>
+  <depend>texnitis_nav_core</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <mbf_simple_core plugin="${prefix}/plugins.xml" />
+  </export>
+</package>

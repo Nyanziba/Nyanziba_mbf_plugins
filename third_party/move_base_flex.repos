@@ -1,0 +1,14 @@
+# Pinned upstream sources for the texnitis mbf navigation stack.
+#
+# Usage (from the parent of texnitis_mbf_plugins, in your colcon workspace):
+#
+#     vcs import < texnitis_mbf_plugins/third_party/move_base_flex.repos
+#
+# This drops naturerobots/move_base_flex (ros2 branch) into the workspace at a
+# fixed SHA. Bumping the SHA is a deliberate PR-level decision, not implicit.
+
+repositories:
+  move_base_flex:
+    type: git
+    url: https://github.com/naturerobots/move_base_flex.git
+    version: 4841e12affd552e111cdce925faed8b92648b850  # ros2 branch HEAD as of 2026-05-04

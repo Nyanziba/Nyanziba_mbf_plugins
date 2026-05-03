@@ -1,0 +1,47 @@
+# colcon / ament
+build/
+install/
+log/
+.cache/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Object / library files
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.tox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# vcs imported sources land here when developers run vcs locally
+src_imported/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*~
+
+# Local-only
+.envrc
+.env

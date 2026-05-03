@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>texnitis_mbf_tools</name>
+  <version>0.0.1</version>
+  <description>Python tools (waypoint sender, mbf action bridge, nav_state publisher) for the texnitis mbf navigation stack. Built with ament_cmake + ament_cmake_python.</description>
+  <maintainer email="katsuya.honda@oedodynamics.co.jp">Nyanziba</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>mbf_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
