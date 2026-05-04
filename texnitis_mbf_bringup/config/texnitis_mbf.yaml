@@ -8,11 +8,13 @@ move_base_flex:
     robot_frame: base_link
     controller_frequency: 20.0
     planner_frequency: 1.0
-    # Empty disables mbf's "robot ignored cmd_vel" oscillation watchdog.
-    # The simulator and our adapters do not produce noisy odom -> cmd_vel
-    # mismatches; on the real robot, set this to /odom (or whatever the
-    # wheel-odom topic is) to re-enable the safety stop.
-    odom_topic: ""
+    # mbf's velocity-ignored watchdog (abstract_controller_execution.cpp)
+    # disables itself when cmd_vel_ignored_tolerance <= 0. We turn it off
+    # here because the headless sim does not feed back robot velocity
+    # through the path mbf inspects, so the watchdog mis-fires. Real
+    # hardware should restore this to ~5.0 s.
+    cmd_vel_ignored_tolerance: 0.0
+    odom_topic: /odom
 
     # mbf's AbstractPluginManager expects the lists to be plain strings
     # (the *names*), and per-plugin `type:` to live in the named block.
