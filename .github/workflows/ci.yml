@@ -164,21 +164,29 @@ jobs:
           vcs import src < src/texnitis_mbf_plugins/third_party/move_base_flex.repos
           vcs import src < src/texnitis_mbf_plugins/third_party/texnitis_nav_core.repos
           ls src
-      - name: Resolve nav_core SHA for cache key
-        id: nav_core_sha
+      - name: Resolve upstream SHAs for cache keys
+        id: upstream_shas
         shell: bash
         run: |
           set -e
-          cd $GITHUB_WORKSPACE/src/texnitis_nav_core
-          sha=$(git rev-parse HEAD)
-          echo "sha=$sha" >> $GITHUB_OUTPUT
-          echo "Resolved nav_core SHA: $sha"
+          nav_core_sha=$(git -C $GITHUB_WORKSPACE/src/texnitis_nav_core rev-parse HEAD)
+          mbf_sha=$(git -C $GITHUB_WORKSPACE/src/move_base_flex rev-parse HEAD)
+          echo "nav_core_sha=$nav_core_sha" >> $GITHUB_OUTPUT
+          echo "mbf_sha=$mbf_sha" >> $GITHUB_OUTPUT
+          echo "nav_core: $nav_core_sha"
+          echo "move_base_flex: $mbf_sha"
       - name: Cache nav_core install tree
         id: cache_nav_core
         uses: actions/cache@v4
         with:
           path: install_nav_core
-          key: nav-core-jazzy-${{ steps.nav_core_sha.outputs.sha }}-mppi-off
+          key: nav-core-jazzy-${{ steps.upstream_shas.outputs.nav_core_sha }}-mppi-off
+      - name: Cache mbf install tree
+        id: cache_mbf
+        uses: actions/cache@v4
+        with:
+          path: install_mbf
+          key: mbf-jazzy-${{ steps.upstream_shas.outputs.mbf_sha }}-merge
       - name: Cache ccache directory
         uses: actions/cache@v4
         with:
@@ -207,7 +215,7 @@ jobs:
           rosdep install --from-paths src --ignore-src -r -y \
               --rosdistro=jazzy \
               --skip-keys "texnitis_nav_core"
-      - name: Build texnitis_nav_core (cmake stage)
+      - name: Build texnitis_nav_core (if cache miss)
         if: steps.cache_nav_core.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -223,24 +231,45 @@ jobs:
           cmake --build build_nav_core -j2
           cmake --install build_nav_core
           ccache --show-stats | head -20
-      - name: Build colcon workspace
+      - name: Build move_base_flex into install_mbf (if cache miss)
+        if: steps.cache_mbf.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -e
           source /opt/ros/jazzy/setup.bash
           export PATH=/usr/lib/ccache:$PATH
+          cd $GITHUB_WORKSPACE
+          # Build mbf into a private prefix keyed on its SHA. --merge-install
+          # collapses everything into one install_mbf/{lib,share,...} so the
+          # cached blob is small and a single `source install_mbf/setup.bash`
+          # gets the entire upstream onto AMENT_PREFIX_PATH.
+          colcon build \
+              --base-paths src/move_base_flex \
+              --build-base build_mbf \
+              --install-base install_mbf \
+              --merge-install \
+              --packages-up-to mbf_simple_nav \
+              --cmake-args \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          ccache --show-stats | head -20
+      - name: Build texnitis packages on top of install_mbf
+        shell: bash
+        run: |
+          set -e
+          source /opt/ros/jazzy/setup.bash
+          source $GITHUB_WORKSPACE/install_mbf/setup.bash
+          export PATH=/usr/lib/ccache:$PATH
           export texnitis_nav_core_DIR=$GITHUB_WORKSPACE/install_nav_core/lib/cmake/texnitis_nav_core
           export CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install_nav_core:$CMAKE_PREFIX_PATH
           cd $GITHUB_WORKSPACE
-          # mbf_simple_nav is only an exec_depend of texnitis_mbf_bringup,
-          # so --packages-up-to texnitis_mbf_sim does NOT pull it into the
-          # build (colcon walks build_depend, not exec_depend). List it
-          # explicitly so the launch can find the binary at runtime.
-          # CMAKE_{C,CXX}_COMPILER_LAUNCHER=ccache makes ccache work even
-          # when colcon picks an absolute compiler path that bypasses the
-          # /usr/lib/ccache shims.
+          # Skip every mbf_* package: install_mbf/setup.bash already exposes
+          # them via AMENT_PREFIX_PATH, so find_package(mbf_*) resolves there
+          # and we avoid rebuilding upstream sources every push.
           colcon build \
-              --packages-up-to texnitis_mbf_sim mbf_simple_nav \
+              --packages-up-to texnitis_mbf_sim \
+              --packages-ignore-regex '^mbf_.*' \
               --cmake-args \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
@@ -252,6 +281,7 @@ jobs:
         run: |
           set -e
           source /opt/ros/jazzy/setup.bash
+          source $GITHUB_WORKSPACE/install_mbf/setup.bash
           source $GITHUB_WORKSPACE/install/setup.bash
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/install_nav_core/lib:$LD_LIBRARY_PATH
           # Headless: no DISPLAY, no GUI. Hard ceiling at 180s in case the
