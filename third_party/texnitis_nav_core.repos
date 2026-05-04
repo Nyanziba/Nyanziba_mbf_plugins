@@ -1,0 +1,15 @@
+# Pinned source for the ROS-free algorithm core consumed by the mbf adapters.
+#
+# Usage (from the parent of texnitis_mbf_plugins, in your colcon workspace):
+#
+#     vcs import < texnitis_mbf_plugins/third_party/texnitis_nav_core.repos
+#
+# Bumping `version` to a newer commit SHA on `main` is a deliberate
+# PR-level decision: the mbf adapter compiles against C++ symbols from
+# nav_core, so a SHA bump may need matching changes here.
+
+repositories:
+  texnitis_nav_core:
+    type: git
+    url: https://github.com/Nyanziba/texnitis_nav_core.git
+    version: main

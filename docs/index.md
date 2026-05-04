@@ -16,6 +16,7 @@
 | WebUI の使い方 | [usage/webui.md](usage/webui.md) |
 | ウェイポイント走行 | [usage/waypoint_sender.md](usage/waypoint_sender.md) |
 | 自作プラグインを足す | [usage/custom_plugin.md](usage/custom_plugin.md) |
+| ROS 2 シム + E2E チェック | [usage/sim_e2e.md](usage/sim_e2e.md) |
 | 全体像をつかむ | [architecture.md](architecture.md) |
 | なぜこの設計なのか | [design_rationale.md](design_rationale.md) |
 | ソースの読み方 | [reading_guide.md](reading_guide.md) |
