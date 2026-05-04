@@ -94,6 +94,19 @@ uint32_t LookaheadController::computeVelocityCommands (
     cmd_vel.twist.linear.y  = out.vy;
     cmd_vel.twist.angular.z = out.wz;
 
+    // State trace: 20 Hz × 1 in 20 → roughly once per second. Enough to
+    // confirm the controller is alive in CI without flooding the log.
+    ++compute_calls_;
+    if (auto node = node_.lock (); node && (compute_calls_ % 20 == 1)) {
+        RCLCPP_INFO (node->get_logger (),
+                     "[%s] compute #%zu pose=(%.2f,%.2f,%.2f) "
+                     "cmd=(%.2f,%.2f,%.2f) status=%s plan_size=%zu",
+                     name_.c_str (), compute_calls_,
+                     last_pose_.x, last_pose_.y, last_pose_.yaw,
+                     out.vx, out.vy, out.wz,
+                     nc::toString (status), cached_path_size_);
+    }
+
     if (status != nc::ControllerResult::Success && status != nc::ControllerResult::GoalReached) {
         message = std::string ("LookaheadController: ") + nc::toString (status);
     }
@@ -104,7 +117,15 @@ bool LookaheadController::isGoalReached (double dist_tolerance, double angle_tol
     if (!core_) {
         return false;
     }
-    return core_->isGoalReached (dist_tolerance, angle_tolerance);
+    const bool reached = core_->isGoalReached (dist_tolerance, angle_tolerance);
+    if (reached) {
+        if (auto node = node_.lock ()) {
+            RCLCPP_INFO (node->get_logger (),
+                         "[%s] isGoalReached -> true (d_tol=%.3f a_tol=%.3f)",
+                         name_.c_str (), dist_tolerance, angle_tolerance);
+        }
+    }
+    return reached;
 }
 
 bool LookaheadController::setPlan (const std::vector<geometry_msgs::msg::PoseStamped> &plan) {
@@ -112,7 +133,15 @@ bool LookaheadController::setPlan (const std::vector<geometry_msgs::msg::PoseSta
         return false;
     }
     cancel_requested_.store (false, std::memory_order_relaxed);
-    core_->setPlan (mbc::toPath2D (plan));
+    auto path_2d = mbc::toPath2D (plan);
+    cached_path_size_ = path_2d.poses.size ();
+    ++set_plan_calls_;
+    if (auto node = node_.lock ()) {
+        RCLCPP_INFO (node->get_logger (),
+                     "[%s] setPlan #%zu received path with %zu poses",
+                     name_.c_str (), set_plan_calls_, cached_path_size_);
+    }
+    core_->setPlan (std::move (path_2d));
     return true;
 }
 

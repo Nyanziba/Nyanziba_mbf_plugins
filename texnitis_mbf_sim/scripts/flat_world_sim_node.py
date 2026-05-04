@@ -32,7 +32,7 @@ import math
 from typing import Optional
 
 import rclpy
-from geometry_msgs.msg import Twist, TransformStamped
+from geometry_msgs.msg import Twist, TwistStamped, TransformStamped
 from nav_msgs.msg import Odometry, OccupancyGrid
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy
@@ -105,8 +105,12 @@ class FlatWorldSimNode(Node):
         odom_topic = self.get_parameter("odom_topic").value
         map_topic = self.get_parameter("map_topic").value
 
+        # mbf (and any modern ROS 2 controller) publishes TwistStamped.
+        # rclpy disallows two subscribers with incompatible types on the
+        # same topic, so we accept only TwistStamped here. Legacy nodes
+        # publishing plain Twist need a separate /cmd_vel_unstamped relay.
         self._cmd_sub = self.create_subscription(
-            Twist, cmd_vel_topic, self._on_cmd_vel, 10
+            TwistStamped, cmd_vel_topic, self._on_cmd_vel_stamped, 10
         )
 
         map_qos = QoSProfile(
@@ -135,6 +139,9 @@ class FlatWorldSimNode(Node):
         self._cmd_vx = saturate(msg.linear.x, self._max_linear_speed)
         self._cmd_vy = saturate(msg.linear.y, self._max_linear_speed)
         self._cmd_wz = saturate(msg.angular.z, self._max_angular_speed)
+
+    def _on_cmd_vel_stamped(self, msg: TwistStamped) -> None:
+        self._on_cmd_vel(msg.twist)
 
     def _on_map(self, msg: OccupancyGrid) -> None:
         self._occupancy = OccupancyMap(

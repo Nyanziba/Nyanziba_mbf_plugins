@@ -26,7 +26,7 @@ from typing import Optional
 
 import rclpy
 from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped, Twist
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -84,7 +84,7 @@ class E2EChecker(Node):
             Odometry, "/odom", self._on_odom, 10
         )
         self._cmd_vel_sub = self.create_subscription(
-            Twist, "/cmd_vel", self._on_cmd_vel, 10
+            TwistStamped, "/cmd_vel", self._on_cmd_vel, 10
         )
 
     def _on_odom(self, msg: Odometry) -> None:
@@ -95,9 +95,9 @@ class E2EChecker(Node):
             msg.pose.pose.orientation.z,
         )
 
-    def _on_cmd_vel(self, msg: Twist) -> None:
+    def _on_cmd_vel(self, msg: TwistStamped) -> None:
         self._cmd_vel_count += 1
-        self._latest_cmd_vel = (msg.linear.x, msg.linear.y, msg.angular.z)
+        self._latest_cmd_vel = (msg.twist.linear.x, msg.twist.linear.y, msg.twist.angular.z)
 
     def _on_diag(self) -> None:
         pose = self._latest_pose or (0.0, 0.0, 0.0)
