@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>texnitis_move_base_like | Debug Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <div class="background">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+  </div>
+
+  <main class="dashboard">
+    <header class="header">
+      <h1>texnitis_move_base_like <span>Dashboard</span></h1>
+      <div class="header-actions">
+        <a class="header-link" href="map-editor.html">Occupancy Grid Editor</a>
+        <div id="connection-status" class="status-badge disconnected">
+          <span class="indicator"></span>
+          <span class="text">Connecting...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Visualization (2D Canvas) -->
+    <section class="card glass viz-card">
+      <div class="card-header">
+        <h2>Navigation Visualization</h2>
+        <div class="viz-controls">
+          <button id="btn-reset-view" class="viz-btn" title="Reset View">⟲</button>
+          <button id="btn-follow-robot" class="viz-btn active" title="Follow Robot">🎯</button>
+        </div>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="nav-canvas" width="800" height="500"></canvas>
+        <div class="canvas-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#2e86fb"></span>Robot (Fused)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ff4757"></span>Goal</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#12d8a4"></span>Global Path</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ffa502"></span>Local Path</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      
+      <!-- Navigation State Card -->
+      <section class="card glass nav-state-card">
+        <div class="card-header">
+          <h2>Navigation State</h2>
+          <span class="topic-label">~/nav_state</span>
+        </div>
+        <div class="state-grid">
+          <div class="state-row">
+            <span class="state-label">Pose Source</span>
+            <span class="state-value badge" id="state-pose-source">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Has Goal</span>
+            <span class="state-value" id="state-has-goal">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Has Path</span>
+            <span class="state-value" id="state-has-path">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Path Length</span>
+            <span class="state-value" id="state-path-length">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Distance to Goal</span>
+            <span class="state-value highlight" id="state-distance">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Yaw Diff to Goal</span>
+            <span class="state-value" id="state-yaw-diff">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">XY Reached</span>
+            <span class="state-value" id="state-xy-reached">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Yaw Reached</span>
+            <span class="state-value" id="state-yaw-reached">--</span>
+          </div>
+          <div class="state-row">
+            <span class="state-label">Last Error</span>
+            <span class="state-value error" id="state-last-error">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Pose Card -->
+      <section class="card glass">
+        <div class="card-header">
+          <h2>Fused Pose</h2>
+          <span class="topic-label">~/fused_pose</span>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span class="label">X</span>
+            <span class="value" id="pose-x">0.00</span>
+          </div>
+          <div class="metric">
+            <span class="label">Y</span>
+            <span class="value" id="pose-y">0.00</span>
+          </div>
+          <div class="metric">
+            <span class="label">Yaw</span>
+            <span class="value" id="pose-yaw">0.00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Target Goal Card -->
+      <section class="card glass">
+        <div class="card-header">
+          <h2>Target Goal</h2>
+          <span class="topic-label">~/current_goal</span>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span class="label">X</span>
+            <span class="value" id="goal-x">--</span>
+          </div>
+          <div class="metric">
+            <span class="label">Y</span>
+            <span class="value" id="goal-y">--</span>
+          </div>
+          <div class="metric">
+            <span class="label">Yaw</span>
+            <span class="value" id="goal-yaw">--</span>
+          </div>
+        </div>
+        <div class="distance-metric">
+          <span class="label">Distance to Goal:</span>
+          <span class="value highlight" id="distance-val">--</span>
+        </div>
+      </section>
+
+      <!-- Velocity Commands Card -->
+      <section class="card glass">
+        <div class="card-header">
+          <h2>Velocity Commands</h2>
+          <span class="topic-label">/cmd_vel</span>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span class="label">Linear X</span>
+            <span class="value" id="vel-x">0.00</span>
+          </div>
+          <div class="metric">
+            <span class="label">Linear Y</span>
+            <span class="value" id="vel-y">0.00</span>
+          </div>
+          <div class="metric">
+            <span class="label">Angular Z</span>
+            <span class="value" id="vel-yaw">0.00</span>
+          </div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-container">
+            <div class="bar-fill" id="vel-bar-x"></div>
+          </div>
+          <div class="bar-label">V.x</div>
+          <div class="bar-container angular">
+            <div class="bar-fill" id="vel-bar-yaw"></div>
+          </div>
+          <div class="bar-label">W.z</div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

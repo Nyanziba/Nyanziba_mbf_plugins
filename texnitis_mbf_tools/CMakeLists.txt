@@ -14,12 +14,12 @@ find_package(ament_cmake_python REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 
-# install(PROGRAMS
-#     scripts/waypoint_sender.py
-#     scripts/mbf_action_bridge.py
-#     scripts/nav_state_publisher.py
-#     DESTINATION lib/${PROJECT_NAME}
-# )
+install(PROGRAMS
+    scripts/waypoint_sender.py
+    scripts/mbf_action_bridge.py
+    scripts/nav_state_publisher.py
+    DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
