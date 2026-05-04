@@ -31,6 +31,7 @@ find_package(texnitis_nav_core REQUIRED CONFIG)
 add_library(texnitis_mbf_controllers SHARED
     src/lookahead_controller.cpp
     src/diff_drive_pure_pursuit_controller.cpp
+    src/mecanum_mppi_controller.cpp
 )
 
 target_include_directories(texnitis_mbf_controllers
