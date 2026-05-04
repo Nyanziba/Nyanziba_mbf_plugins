@@ -194,8 +194,12 @@ jobs:
           export texnitis_nav_core_DIR=$GITHUB_WORKSPACE/install_nav_core/lib/cmake/texnitis_nav_core
           export CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install_nav_core:$CMAKE_PREFIX_PATH
           cd $GITHUB_WORKSPACE
+          # mbf_simple_nav is only an exec_depend of texnitis_mbf_bringup,
+          # so --packages-up-to texnitis_mbf_sim does NOT pull it into the
+          # build (colcon walks build_depend, not exec_depend). List it
+          # explicitly so the launch can find the binary at runtime.
           colcon build \
-              --packages-up-to texnitis_mbf_sim \
+              --packages-up-to texnitis_mbf_sim mbf_simple_nav \
               --cmake-args \
                 -DCMAKE_BUILD_TYPE=Release \
                 -Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR
