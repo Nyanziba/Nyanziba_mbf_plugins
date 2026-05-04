@@ -40,6 +40,12 @@ pixi run test
 | `colcon build` が `find_package(mbf_simple_core)` で失敗 | `pixi run setup` を再実行して `src/move_base_flex` が消えていないか確認 |
 | 起動するが `outcome=58 (TF_ERROR)` | ホスト時計と launch 内の `use_sim_time` が噛み合っていない。`pixi run sim-e2e` を `--use_sim_time:=false` で（既定値） |
 | AppleSilicon でクラッシュ | RoboStack の osx-arm64 build に当該パッケージがあるか確認。無ければ条件付きで `pixi run sim-interactive --controller=lookahead` で MPPI を回避 |
+| `UnsupportedTypeSupport: Could not import 'rosidl_typesupport_c' for package 'mbf_msgs'` | RoboStack の rosidl_typesupport ABI が workspace 生成のメッセージと噛み合わない既知の制限。回避策は Docker (`docs/usage/sim_e2e.md`) で動かすか、workspace 生成時に `--cmake-args -DROSIDL_TYPESUPPORT_IMPL=...` で RoboStack 側に揃える（実験的） |
+
+## 既知の制限
+
+- `pixi run sim-e2e` / `sim-interactive`: 上記の typesupport 問題で macOS では完全には動かない可能性があります。CI と同じ Docker 経由なら確実です（[sim_e2e.md](sim_e2e.md)）。
+- `pixi run build` と `pixi run test`（純 Python ユニット）は安定して動きます。ローカルでロジック確認したいときに使ってください。
 
 ## なぜ Docker ではないのか
 
