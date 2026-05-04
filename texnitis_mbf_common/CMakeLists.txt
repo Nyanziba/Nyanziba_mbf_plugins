@@ -13,18 +13,52 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
-find_package(geometry_msgs QUIET)
-find_package(nav_msgs QUIET)
-find_package(rclcpp QUIET)
-find_package(tf2 QUIET)
-find_package(tf2_geometry_msgs QUIET)
-find_package(tf2_ros QUIET)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(mbf_msgs QUIET)
-find_package(texnitis_nav_core QUIET CONFIG)
+find_package(texnitis_nav_core REQUIRED CONFIG)
+
+add_library(texnitis_mbf_common SHARED
+    src/map_provider.cpp
+)
+
+target_include_directories(texnitis_mbf_common
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(texnitis_mbf_common
+    PUBLIC
+        rclcpp
+        geometry_msgs
+        nav_msgs
+        tf2
+        tf2_geometry_msgs
+        tf2_ros
+)
+
+target_link_libraries(texnitis_mbf_common
+    PUBLIC
+        texnitis_nav_core::texnitis_nav_core
+)
 
 install(
     DIRECTORY include/
     DESTINATION include
+)
+
+install(
+    TARGETS texnitis_mbf_common
+    EXPORT texnitis_mbf_commonTargets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
 )
 
 if(BUILD_TESTING)
@@ -32,6 +66,8 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 endif()
 
+ament_export_targets(texnitis_mbf_commonTargets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
+ament_export_dependencies(rclcpp geometry_msgs nav_msgs tf2 tf2_geometry_msgs tf2_ros texnitis_nav_core)
 
 ament_package()
