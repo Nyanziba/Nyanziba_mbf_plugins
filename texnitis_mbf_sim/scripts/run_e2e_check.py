@@ -98,13 +98,18 @@ class E2EChecker(Node):
             self.get_logger().error("action server never came up")
             return 2
 
-        # Block until /odom is flowing (sim node up, tf broadcast active),
-        # then give tf2 a buffer of past samples so a fresh goal stamp
-        # falls within the buffered window.
-        if not self._wait_for_odom(timeout_sec=10.0):
-            self.get_logger().error("no /odom seen within 10s; sim node not running?")
+        # Block until /odom is flowing (sim node up). mbf's RobotInfo only
+        # opens its own /odom subscription after its action is created, so
+        # we additionally wait for several seconds of warmup so the tf
+        # buffer in mbf has samples bracketing the goal stamp.
+        if not self._wait_for_odom(timeout_sec=15.0):
+            self.get_logger().error("no /odom seen within 15s; sim node not running?")
             return 6
-        end_warmup = self.get_clock().now().nanoseconds + int(1.5 * 1e9)
+        warmup_seconds = 5.0
+        self.get_logger().info(
+            f"odom flowing; warming up tf buffer for {warmup_seconds:.1f}s before sending goal"
+        )
+        end_warmup = self.get_clock().now().nanoseconds + int(warmup_seconds * 1e9)
         while self.get_clock().now().nanoseconds < end_warmup:
             rclpy.spin_once(self, timeout_sec=0.05)
 
