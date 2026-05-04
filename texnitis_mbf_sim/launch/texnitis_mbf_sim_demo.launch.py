@@ -28,6 +28,7 @@ from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -112,10 +113,17 @@ def generate_launch_description() -> LaunchDescription:
         name="mbf_e2e_check",
         output="screen",
         condition=IfCondition(e2e_check),
+        # LaunchConfiguration returns strings; force-type each scalar so
+        # rclpy declares the parameter as DOUBLE rather than rejecting the
+        # string value.
         parameters=[
             {
-                "goal": [goal_x, goal_y, goal_yaw],
-                "overall_timeout_s": overall_timeout_s,
+                "goal_x": ParameterValue(goal_x, value_type=float),
+                "goal_y": ParameterValue(goal_y, value_type=float),
+                "goal_yaw": ParameterValue(goal_yaw, value_type=float),
+                "overall_timeout_s": ParameterValue(
+                    overall_timeout_s, value_type=float
+                ),
             }
         ],
     )

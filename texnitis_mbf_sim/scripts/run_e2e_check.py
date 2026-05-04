@@ -41,7 +41,13 @@ class E2EChecker(Node):
         super().__init__("mbf_e2e_check")
 
         self.declare_parameter("action_name", "/move_base_flex/move_base")
-        self.declare_parameter("goal", [3.0, 0.5, 0.0])
+        # Three scalar params instead of one DOUBLE_ARRAY: launch's
+        # LaunchConfiguration substitutions cannot be packed into a list
+        # parameter without being concatenated as a single string, so we
+        # accept them separately and reconstruct the tuple here.
+        self.declare_parameter("goal_x", 3.0)
+        self.declare_parameter("goal_y", 0.5)
+        self.declare_parameter("goal_yaw", 0.0)
         self.declare_parameter("frame_id", "map")
         self.declare_parameter("planner", "astar")
         self.declare_parameter("controller", "lookahead")
@@ -49,11 +55,11 @@ class E2EChecker(Node):
         self.declare_parameter("overall_timeout_s", 90.0)
 
         self._action_name = self.get_parameter("action_name").value
-        goal = list(self.get_parameter("goal").value)
-        if len(goal) != 3:
-            self.get_logger().fatal(f"goal expects [x,y,yaw], got {goal}")
-            raise SystemExit(2)
-        self._goal_xyyaw = (float(goal[0]), float(goal[1]), float(goal[2]))
+        self._goal_xyyaw = (
+            float(self.get_parameter("goal_x").value),
+            float(self.get_parameter("goal_y").value),
+            float(self.get_parameter("goal_yaw").value),
+        )
         self._frame_id = self.get_parameter("frame_id").value
         self._planner = self.get_parameter("planner").value
         self._controller = self.get_parameter("controller").value

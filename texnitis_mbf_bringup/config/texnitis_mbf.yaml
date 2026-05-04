@@ -9,16 +9,16 @@ move_base_flex:
     controller_frequency: 20.0
     planner_frequency: 1.0
 
-    planners:
-      - name: astar
-        type: texnitis::mbf_planners::AStarPlanner
-    controllers:
-      - name: lookahead
-        type: texnitis::mbf_controllers::LookaheadController
+    # mbf's AbstractPluginManager expects the lists to be plain strings
+    # (the *names*), and per-plugin `type:` to live in the named block.
+    # See mbf_abstract_nav/include/.../abstract_plugin_manager.tcc.
+    planners: ["astar"]
+    controllers: ["lookahead"]
 
     # Per-planner parameters, picked up by AStarPlanner::initialize using
     # the same prefix as the planner name above.
     astar:
+      type: "texnitis::mbf_planners::AStarPlanner"
       map_topic: /map
       global_frame: map
       occupied_threshold: 65
@@ -30,6 +30,7 @@ move_base_flex:
 
     # Per-controller parameters.
     lookahead:
+      type: "texnitis::mbf_controllers::LookaheadController"
       base_frame: base_link
       kp_xy: 1.0
       kp_yaw: 1.2
