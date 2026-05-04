@@ -1,0 +1,82 @@
+[project]
+name = "texnitis_mbf_plugins"
+description = "Local pixi env for the mbf navigation stack (macOS-friendly, ROS 2 Jazzy via RoboStack)"
+authors = ["Nyanziba"]
+channels = ["robostack-jazzy", "conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+# ROS 2 + colcon toolchain
+ros-jazzy-desktop = "*"
+colcon-common-extensions = "*"
+rosdep = "*"
+
+# Build tooling
+cmake = "*"
+ninja = "*"
+make = "*"
+compilers = "*"
+pkg-config = "*"
+
+# Algorithms / math
+eigen = "*"
+
+# nav2 pieces used by the demo launch
+ros-jazzy-nav2-map-server = "*"
+ros-jazzy-nav2-lifecycle-manager = "*"
+ros-jazzy-pluginlib = "*"
+
+# Python deps for tools/sim helpers
+python = ">=3.11,<3.13"
+pyyaml = "*"
+pytest = "*"
+numpy = "*"
+
+[tasks]
+# `pixi run setup` clones nav_core + mbf into ./src once.
+setup = '''
+mkdir -p src
+[ -d src/texnitis_mbf_plugins ] || ln -sf "$(pwd)" src/texnitis_mbf_plugins
+[ -d src/move_base_flex ]    || vcs import src < third_party/move_base_flex.repos
+[ -d src/texnitis_nav_core ] || vcs import src < third_party/texnitis_nav_core.repos
+'''
+
+# Build nav_core into install_nav_core/, then the rest of the workspace.
+build = '''
+set -e
+[ -f install_nav_core/lib/libtexnitis_nav_core.a ] || ( \
+    cmake -S src/texnitis_nav_core -B build_nav_core \
+        -DCMAKE_BUILD_TYPE=Release -DNAV_CORE_WITH_MPPI=OFF \
+        -DNAV_CORE_BUILD_PYTHON=OFF -DNAV_CORE_BUILD_TESTS=OFF \
+        -DCMAKE_INSTALL_PREFIX=$(pwd)/install_nav_core && \
+    cmake --build build_nav_core -j && \
+    cmake --install build_nav_core )
+export texnitis_nav_core_DIR=$(pwd)/install_nav_core/lib/cmake/texnitis_nav_core
+export CMAKE_PREFIX_PATH=$(pwd)/install_nav_core:$CMAKE_PREFIX_PATH
+colcon build \
+    --packages-up-to texnitis_mbf_sim mbf_simple_nav \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_MPPI_CONTROLLER=OFF \
+    -Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR
+'''
+
+# Source the workspace and run the headless E2E launch.
+sim-e2e = '''
+source install/setup.bash
+export LD_LIBRARY_PATH=$(pwd)/install_nav_core/lib:$LD_LIBRARY_PATH
+ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py \
+    e2e_check:=true \
+    goal_x:=2.5 goal_y:=0.5 goal_yaw:=0.0 \
+    overall_timeout_s:=180.0
+'''
+
+# Interactive variant: bring up sim + mbf + map_server but don't shut down,
+# so you can drive goals from rviz2 or the waypoint sender.
+sim-interactive = '''
+source install/setup.bash
+export LD_LIBRARY_PATH=$(pwd)/install_nav_core/lib:$LD_LIBRARY_PATH
+ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py e2e_check:=false
+'''
+
+# Pure-Python unit tests (no ROS required).
+test = "pytest texnitis_mbf_sim/test texnitis_mbf_tools/test"
