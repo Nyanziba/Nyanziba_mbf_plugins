@@ -154,6 +154,7 @@ jobs:
               libeigen3-dev \
               build-essential \
               cmake \
+              ccache \
               git
       - name: vcs import upstream sources
         shell: bash
@@ -163,6 +164,39 @@ jobs:
           vcs import src < src/texnitis_mbf_plugins/third_party/move_base_flex.repos
           vcs import src < src/texnitis_mbf_plugins/third_party/texnitis_nav_core.repos
           ls src
+      - name: Resolve nav_core SHA for cache key
+        id: nav_core_sha
+        shell: bash
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE/src/texnitis_nav_core
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+          echo "Resolved nav_core SHA: $sha"
+      - name: Cache nav_core install tree
+        id: cache_nav_core
+        uses: actions/cache@v4
+        with:
+          path: install_nav_core
+          key: nav-core-jazzy-${{ steps.nav_core_sha.outputs.sha }}-mppi-off
+      - name: Cache ccache directory
+        uses: actions/cache@v4
+        with:
+          path: /github/home/.ccache
+          key: ccache-jazzy-${{ github.sha }}
+          restore-keys: |
+            ccache-jazzy-
+      - name: Configure ccache
+        shell: bash
+        run: |
+          set -e
+          # Put ccache shims first so colcon's invocations of gcc/g++ are
+          # transparently cached. 2 GB cap is plenty for the mbf workspace.
+          export PATH=/usr/lib/ccache:$PATH
+          mkdir -p /github/home/.ccache
+          ccache --max-size=2G
+          ccache --zero-stats
+          ccache --show-config | head -20
       - name: Resolve apt deps with rosdep
         shell: bash
         run: |
@@ -174,9 +208,11 @@ jobs:
               --rosdistro=jazzy \
               --skip-keys "texnitis_nav_core"
       - name: Build texnitis_nav_core (cmake stage)
+        if: steps.cache_nav_core.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -e
+          export PATH=/usr/lib/ccache:$PATH
           cd $GITHUB_WORKSPACE
           cmake -S src/texnitis_nav_core -B build_nav_core \
               -DCMAKE_BUILD_TYPE=Release \
@@ -186,11 +222,13 @@ jobs:
               -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install_nav_core
           cmake --build build_nav_core -j2
           cmake --install build_nav_core
+          ccache --show-stats | head -20
       - name: Build colcon workspace
         shell: bash
         run: |
           set -e
           source /opt/ros/jazzy/setup.bash
+          export PATH=/usr/lib/ccache:$PATH
           export texnitis_nav_core_DIR=$GITHUB_WORKSPACE/install_nav_core/lib/cmake/texnitis_nav_core
           export CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install_nav_core:$CMAKE_PREFIX_PATH
           cd $GITHUB_WORKSPACE
@@ -198,11 +236,17 @@ jobs:
           # so --packages-up-to texnitis_mbf_sim does NOT pull it into the
           # build (colcon walks build_depend, not exec_depend). List it
           # explicitly so the launch can find the binary at runtime.
+          # CMAKE_{C,CXX}_COMPILER_LAUNCHER=ccache makes ccache work even
+          # when colcon picks an absolute compiler path that bypasses the
+          # /usr/lib/ccache shims.
           colcon build \
               --packages-up-to texnitis_mbf_sim mbf_simple_nav \
               --cmake-args \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                 -Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR
+          ccache --show-stats | head -30
       - name: Run sim E2E (one goal, success expected)
         shell: bash
         run: |
