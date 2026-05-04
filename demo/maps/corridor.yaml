@@ -1,0 +1,10 @@
+# nav2_map_server 互換のマップ定義。
+# image は同ディレクトリにある PGM を指すので、
+# 別マップを使うときは image / negate / threshold を調整する。
+image: corridor.pgm
+mode: trinary
+resolution: 0.05
+origin: [0.0, 0.0, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196

@@ -1,0 +1,9 @@
+# corridor.yaml の通路を 4 点で周回するシナリオ。
+# loop: true なので Ctrl-C で抜けるまで永遠に走る。
+frame_id: "map"
+loop: true
+waypoints:
+  - {x: 1.0, y: 0.5, yaw: 0.0}
+  - {x: 3.0, y: 0.5, yaw: 0.0}
+  - {x: 3.0, y: 2.0, yaw: 1.5708}
+  - {x: 1.0, y: 2.0, yaw: 3.1416}

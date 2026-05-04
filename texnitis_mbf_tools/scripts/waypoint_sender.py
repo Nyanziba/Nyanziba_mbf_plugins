@@ -20,38 +20,16 @@ Usage:
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 import rclpy
-import yaml
 from geometry_msgs.msg import PoseStamped
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
 from mbf_msgs.action import MoveBase
 
-
-def yaw_to_quaternion(yaw: float) -> tuple[float, float, float, float]:
-    """Return (x, y, z, w) for a quaternion that represents `yaw` only."""
-    return (0.0, 0.0, math.sin(yaw / 2.0), math.cos(yaw / 2.0))
-
-
-def load_waypoints(path: str) -> tuple[list[dict[str, float]], str, bool]:
-    """Read the waypoints YAML and return (waypoints, frame_id, loop)."""
-    with open(path, "r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle)
-    frame_id = data.get("frame_id", "map")
-    loop = bool(data.get("loop", False))
-    waypoints = [
-        {
-            "x": float(wp["x"]),
-            "y": float(wp["y"]),
-            "yaw": float(wp.get("yaw", 0.0)),
-        }
-        for wp in data["waypoints"]
-    ]
-    return waypoints, frame_id, loop
+from texnitis_mbf_tools.utils import load_waypoints_file, yaw_to_quaternion
 
 
 class WaypointSender(Node):
@@ -73,7 +51,7 @@ class WaypointSender(Node):
             self.get_logger().fatal("waypoints_file parameter is required")
             raise SystemExit(1)
 
-        self._waypoints, self._frame_id, self._loop = load_waypoints(waypoints_file)
+        self._waypoints, self._frame_id, self._loop = load_waypoints_file(waypoints_file)
         self.get_logger().info(
             f"Loaded {len(self._waypoints)} waypoints (frame={self._frame_id} loop={self._loop})"
         )

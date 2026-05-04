@@ -1,0 +1,5 @@
+# 1 点だけのゴール。waypoint_sender.py で使うとすぐ抜ける。
+frame_id: "map"
+loop: false
+waypoints:
+  - {x: 2.0, y: 1.0, yaw: 0.0}

@@ -1,8 +1,124 @@
-# parameter_mapping （骨格）
+# 旧 `texnitis_move_base_like.yaml` から `texnitis_mbf.yaml` への移行表
 
-> このファイルは骨格段階。対応するマイルストーン完了時に「コピペで動く手順 / 期待される出力 / トラブルシュート」を埋める。
+旧パッケージのパラメータをそのまま mbf 構成に持ち込むときの対応表。
 
-関連:
-- [../architecture.md](../architecture.md)
-- [../reading_guide.md](../reading_guide.md)
-- [../design_rationale.md](../design_rationale.md)
+## トップレベル
+
+| 旧 yaml キー | 新 yaml の場所 | 備考 |
+|---|---|---|
+| `planner_plugin: ...AStarPlanner` | `planners` リストに `texnitis::mbf_planners::AStarPlanner` |
+| `controller_plugin: ...LookaheadController` | `controllers` リストに `texnitis::mbf_controllers::LookaheadController` |
+| `accept_external_path: true` | `ExePath` アクションに直接 path を投げる方式へ移行 |
+| `external_path_timeout_sec` | クライアント側のタイムアウトに任せる |
+| `control_hz` | `move_base_flex.controller_frequency` |
+| `global_frame` | `move_base_flex.global_frame` |
+| `base_frame` | `move_base_flex.robot_frame` |
+| `map_topic` | `<planner_name>.map_topic` |
+| `cmd_vel_topic` | mbf node 起動時の `--remap` |
+| `goal_pose_topic` | 廃止（mbf アクション or 自前 ActionClient へ） |
+
+## A\* / HeightAware A\* 系
+
+| 旧 yaml | 新 yaml (`<planner_name>.*`) |
+|---|---|
+| `occupied_threshold` | `occupied_threshold` |
+| `unknown_is_obstacle` | `unknown_is_obstacle` |
+| `inflation_radius` | `inflation_radius` |
+| `heading_bins` (HeightAware) | （現状未対応 — M9 以降） |
+| `heading_weight` | （現状未対応） |
+| `height_lethal_threshold` | `height_lethal_threshold` |
+| `height_grid_topic` | `<planner_name>.height_topic` |
+
+## Lookahead Controller
+
+| 旧 yaml | 新 yaml (`<controller_name>.*`) |
+|---|---|
+| `kp_xy` | `kp_xy` |
+| `kp_yaw` | `kp_yaw` |
+| `max_speed_xy` | `max_speed_xy` |
+| `max_speed_yaw` | `max_speed_yaw` |
+| `lookahead_dist` | `lookahead_dist` |
+| `linear_threshold_for_wz` | `linear_threshold_for_wz` |
+| `max_wz_when_moving` | `max_wz_when_moving` |
+| `use_diff_drive` | `use_diff_drive` |
+| `goal_xy_tolerance` | `goal_xy_tolerance`（mbf アクションの `dist_tolerance` も上書きするので注意） |
+| `goal_yaw_tolerance` | `goal_yaw_tolerance` |
+| `goal_stateful` | `goal_stateful` |
+
+## Differential Drive Pure Pursuit
+
+| 旧 yaml (`pp_*`) | 新 yaml (`<controller_name>.*`) |
+|---|---|
+| `pp_max_speed_xy` | `max_linear_velocity` |
+| `pp_max_speed_yaw` | `max_angular_velocity` |
+| `pp_max_acc_xy` | `max_acceleration` |
+| `pp_max_acc_yaw` | `max_angular_acceleration` |
+| `pp_lookahead_dist` | `min_lookahead_distance` / `max_lookahead_distance` の組へ拡張 |
+| （新規）`lookahead_time` | 速度ベースの動的 lookahead [s] |
+| `pp_curvature_p` | （現状未対応 — M9 以降） |
+
+## Mecanum MPPI
+
+| 旧 mppi_plugins yaml | 新 yaml (`<controller_name>.*`) |
+|---|---|
+| `horizon` | `horizon` |
+| `num_samples` | `num_samples` |
+| `lambda` | `lambda` |
+| `sigma_ax` / `sigma_ay` / `sigma_alpha` | `sigma: [σx, σy, σα]` のリスト |
+| `u_max_*` | `u_max: [...]` のリスト |
+| `dt` | `dt` |
+| `seed` | `seed` |
+
+## 完全な実例
+
+`texnitis_mbf_bringup/config/texnitis_mbf.yaml` を編集元として使うのが
+最短です。3 つの controller をすべて宣言して切替可能にする例:
+
+```yaml
+move_base_flex:
+  ros__parameters:
+    global_frame: map
+    robot_frame: base_link
+    controller_frequency: 20.0
+    planner_frequency: 1.0
+
+    planners:
+      - {name: astar,    type: texnitis::mbf_planners::AStarPlanner}
+    controllers:
+      - {name: lookahead, type: texnitis::mbf_controllers::LookaheadController}
+      - {name: pursuit,   type: texnitis::mbf_controllers::DiffDrivePurePursuitController}
+      - {name: mppi,      type: texnitis::mbf_controllers::MecanumMppiController}
+
+    astar:
+      map_topic: /map
+      occupied_threshold: 65
+      inflation_radius: 0.30
+
+    lookahead:
+      kp_xy: 1.0
+      kp_yaw: 1.2
+      max_speed_xy: 0.25
+      max_speed_yaw: 0.8
+      lookahead_dist: 0.40
+      goal_xy_tolerance: 0.05
+      goal_yaw_tolerance: 0.10
+      goal_stateful: true
+
+    pursuit:
+      max_linear_velocity: 0.50
+      max_acceleration: 0.50
+      lookahead_time: 0.80
+      min_lookahead_distance: 0.30
+      max_lookahead_distance: 1.00
+      goal_xy_tolerance: 0.06
+
+    mppi:
+      horizon: 25
+      num_samples: 256
+      lambda: 0.10
+      sigma: [0.30, 0.30, 0.40]
+      u_max: [1.50, 1.50, 1.50]
+```
+
+mbf アクション送信時に `goal.controller = "pursuit"` を指定すれば
+runtime に切り替わります。
