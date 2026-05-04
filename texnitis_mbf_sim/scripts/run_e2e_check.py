@@ -26,7 +26,7 @@ from typing import Optional
 
 import rclpy
 from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -76,12 +76,37 @@ class E2EChecker(Node):
         # publishing TF before sending a goal. mbf rejects goals when
         # the map -> base_link lookup is younger than the goal stamp.
         self._got_odom = False
+        self._latest_pose: Optional[tuple[float, float, float]] = None
+        self._cmd_vel_count = 0
+        self._latest_cmd_vel: Optional[tuple[float, float, float]] = None
+        self._diag_timer: Optional[Any] = None
         self._odom_sub = self.create_subscription(
             Odometry, "/odom", self._on_odom, 10
         )
+        self._cmd_vel_sub = self.create_subscription(
+            Twist, "/cmd_vel", self._on_cmd_vel, 10
+        )
 
-    def _on_odom(self, _msg: Odometry) -> None:
+    def _on_odom(self, msg: Odometry) -> None:
         self._got_odom = True
+        self._latest_pose = (
+            msg.pose.pose.position.x,
+            msg.pose.pose.position.y,
+            msg.pose.pose.orientation.z,
+        )
+
+    def _on_cmd_vel(self, msg: Twist) -> None:
+        self._cmd_vel_count += 1
+        self._latest_cmd_vel = (msg.linear.x, msg.linear.y, msg.angular.z)
+
+    def _on_diag(self) -> None:
+        pose = self._latest_pose or (0.0, 0.0, 0.0)
+        cmd = self._latest_cmd_vel or (0.0, 0.0, 0.0)
+        self.get_logger().info(
+            f"[diag] pose=({pose[0]:.2f},{pose[1]:.2f}) "
+            f"cmd_vel_count={self._cmd_vel_count} "
+            f"last_cmd=(vx={cmd[0]:.2f}, vy={cmd[1]:.2f}, wz={cmd[2]:.2f})"
+        )
 
     def _wait_for_odom(self, timeout_sec: float) -> bool:
         deadline = self.get_clock().now().nanoseconds + int(timeout_sec * 1e9)
@@ -123,6 +148,10 @@ class E2EChecker(Node):
             f"yaw={self._goal_xyyaw[2]:.2f} (planner={self._planner}, "
             f"controller={self._controller})"
         )
+        # Heartbeat: every 5 s log pose + cmd_vel count so a stuck
+        # controller leaves a trail in CI logs instead of going dark
+        # for the whole timeout window.
+        self._diag_timer = self.create_timer(5.0, self._on_diag)
         send_future = self._client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self, send_future, timeout_sec=10.0)
         if not send_future.done():
