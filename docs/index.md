@@ -3,7 +3,7 @@
 `naturerobots/move_base_flex`（ros2 ブランチ）に対応する planner / controller
 プラグイン群と、bringup・WebUI・waypoint sender などのツールを提供する。
 コアアルゴリズムは別リポ
-[`texnitis_nav_core`](https://github.com/Nyanziba/texnitis_nav_core)
+[`texnitis_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core)
 に置かれており、本リポは **薄いアダプタ** に徹する。
 
 ## 読み始め
@@ -25,7 +25,7 @@
 
 ## 関連リポジトリ
 
-- [`texnitis_nav_core`](https://github.com/Nyanziba/texnitis_nav_core) — コアアルゴリズム（ROS 非依存）
+- [`texnitis_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core) — コアアルゴリズム（ROS 非依存）
 - [`naturerobots/move_base_flex`](https://github.com/naturerobots/move_base_flex) — 上流の mbf 本体（ros2 ブランチ）
 
 ## ライセンス

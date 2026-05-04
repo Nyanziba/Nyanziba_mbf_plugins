@@ -29,8 +29,8 @@ ROS 2 Jazzy + Ubuntu 24.04 をターゲットに、`texnitis_nav_core` と
 
 ```bash
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-git clone https://github.com/Nyanziba/texnitis_nav_core.git
-git clone https://github.com/Nyanziba/texnitis_mbf_plugins.git
+git clone https://github.com/Nyanziba/Nyanziba_nav_core.git
+git clone https://github.com/Nyanziba/Nyanziba_mbf_plugins.git
 ```
 
 ## 3. 上流の move_base_flex を取り込む
