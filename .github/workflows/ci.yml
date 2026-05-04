@@ -288,13 +288,28 @@ jobs:
           source $GITHUB_WORKSPACE/install_mbf/setup.bash
           source $GITHUB_WORKSPACE/install/setup.bash
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/install_nav_core/lib:$LD_LIBRARY_PATH
+          # ROS 2 launch's Shutdown handler swallows the e2e checker's
+          # non-zero exit, so we route the verdict through a sentinel file.
+          export MBF_E2E_RESULT_FILE=$GITHUB_WORKSPACE/e2e_result.txt
+          rm -f "$MBF_E2E_RESULT_FILE"
           # Headless: no DISPLAY, no GUI. Hard ceiling at 180s in case the
           # launch's own 90s timeout doesn't fire (e.g. spinning subprocess).
           timeout --signal=SIGTERM --kill-after=15s 180s \
               ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py \
                   e2e_check:=true \
                   goal_x:=2.5 goal_y:=0.5 goal_yaw:=0.0 \
-                  overall_timeout_s:=90.0
+                  overall_timeout_s:=90.0 || true
+          echo "--- e2e verdict ---"
+          if [ ! -f "$MBF_E2E_RESULT_FILE" ]; then
+            echo "::error::e2e checker never wrote $MBF_E2E_RESULT_FILE; the launch likely died before reaching the verdict step."
+            exit 1
+          fi
+          verdict=$(cat "$MBF_E2E_RESULT_FILE")
+          echo "e2e checker exit code: $verdict"
+          if [ "$verdict" != "0" ]; then
+            echo "::error::sim-e2e failed (exit code $verdict)"
+            exit 1
+          fi
       - name: Upload colcon logs on failure
         if: failure()
         uses: actions/upload-artifact@v4

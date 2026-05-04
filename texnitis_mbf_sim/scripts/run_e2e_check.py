@@ -20,6 +20,7 @@ Parameters:
 from __future__ import annotations
 
 import math
+import os
 import sys
 from typing import Optional
 
@@ -179,6 +180,19 @@ def main(args: list[str] | None = None) -> None:
         checker.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
+    # ROS 2 launch's Shutdown event handler swallows process exit codes, so
+    # a non-zero return here would still surface as `ros2 launch` exit 0.
+    # Persist the verdict to a well-known file so CI can verify it after
+    # the launch returns.
+    sentinel_path = os.environ.get("MBF_E2E_RESULT_FILE")
+    if sentinel_path:
+        try:
+            with open(sentinel_path, "w") as fp:
+                fp.write(str(exit_code))
+        except OSError:
+            # CI will treat a missing file as failure, which is correct.
+            pass
     sys.exit(exit_code)
 
 
