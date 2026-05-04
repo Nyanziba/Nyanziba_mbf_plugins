@@ -1,0 +1,12 @@
+<library path="texnitis_mbf_controllers">
+  <class type="texnitis::mbf_controllers::LookaheadController"
+         base_class_type="mbf_simple_core::SimpleController">
+    <description>
+      Lookahead pursuit controller that delegates to
+      texnitis_nav_core::LookaheadController. Holonomic by default;
+      set `&lt;name&gt;.use_diff_drive: true` to switch to diff-drive
+      kinematics. Uses a stateful GoalChecker so transient localization
+      wobble cannot un-set the xy-reached flag.
+    </description>
+  </class>
+</library>

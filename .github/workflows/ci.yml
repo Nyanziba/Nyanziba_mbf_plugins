@@ -5,48 +5,55 @@ on:
   pull_request:
 
 jobs:
-  colcon:
-    name: colcon / ros2 jazzy
+  structure:
+    name: package.xml / colcon list (jazzy)
     runs-on: ubuntu-24.04
     container:
       image: osrf/ros:jazzy-desktop
     steps:
-      - name: Checkout texnitis_mbf_plugins
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           path: src/texnitis_mbf_plugins
-
-      # texnitis_nav_core はまだ private なので、CI 内で別途取り込むには
-      # GH_TOKEN を設定する。当面は本ジョブでは ament_lint のみ走らせ、フル
-      # ビルドはローカル / 移行後の public 化を待つ。
-      # - name: Checkout texnitis_nav_core
-      #   uses: actions/checkout@v4
-      #   with:
-      #     repository: Nyanziba/texnitis_nav_core
-      #     token: ${{ secrets.NAV_CORE_TOKEN }}
-      #     path: src/texnitis_nav_core
-
-      - name: Install build tools
+      - name: Install tools
         shell: bash
         run: |
           apt-get update
-          apt-get install -y python3-vcstool python3-colcon-common-extensions
+          apt-get install -y python3-vcstool python3-colcon-common-extensions xmllint || \
+              apt-get install -y python3-vcstool python3-colcon-common-extensions libxml2-utils
       - name: vcs import move_base_flex
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE
           vcs import src < src/texnitis_mbf_plugins/third_party/move_base_flex.repos
-      - name: rosdep install
+      - name: colcon list shows our packages
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          rosdep update
-          rosdep install --from-paths src --ignore-src -r -y || true
-      - name: colcon build (skip until M3)
-        shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          # Real builds land in milestone M3. For now, just make sure that the
-          # workspace can be configured by colcon and that vcs import succeeded.
+          cd $GITHUB_WORKSPACE
           colcon list --packages-up-to texnitis_mbf_bringup
-          # colcon build --packages-up-to texnitis_mbf_bringup --symlink-install
+      - name: package.xml well-formed
+        shell: bash
+        run: |
+          for pkg in src/texnitis_mbf_plugins/texnitis_mbf_*/package.xml; do
+              echo "checking $pkg"
+              xmllint --noout "$pkg"
+          done
+      - name: plugin descriptions well-formed
+        shell: bash
+        run: |
+          for plugin in src/texnitis_mbf_plugins/texnitis_mbf_*/plugins.xml; do
+              [ -f "$plugin" ] || continue
+              echo "checking $plugin"
+              xmllint --noout "$plugin"
+          done
+
+  # A real `colcon build` job that needs both repos checked out lives in
+  # ../tools/local-build.md as a developer recipe. We do not run it here
+  # because texnitis_nav_core is private and giving a CI workflow a PAT
+  # that can clone private repos is heavier than the benefit at this
+  # stage. Once nav_core goes public (or a dedicated NAV_CORE_TOKEN is
+  # provisioned) we'll uncomment this job.
+  #
+  # build:
+  #   name: colcon build
+  #   ...

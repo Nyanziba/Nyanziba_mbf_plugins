@@ -1,0 +1,44 @@
+# Bringup parameters for the texnitis move_base_flex stack.
+# The plugin instance names (`astar`, `lookahead`) are arbitrary; they
+# must just match the keys used as the per-plugin parameter prefix.
+
+move_base_flex:
+  ros__parameters:
+    global_frame: map
+    robot_frame: base_link
+    controller_frequency: 20.0
+    planner_frequency: 1.0
+
+    planners:
+      - name: astar
+        type: texnitis::mbf_planners::AStarPlanner
+    controllers:
+      - name: lookahead
+        type: texnitis::mbf_controllers::LookaheadController
+
+    # Per-planner parameters, picked up by AStarPlanner::initialize using
+    # the same prefix as the planner name above.
+    astar:
+      map_topic: /map
+      global_frame: map
+      occupied_threshold: 65
+      unknown_is_obstacle: true
+      inflation_radius: 0.30
+      max_iterations: 0
+      heuristic_weight: 1.0
+      allow_diagonal: true
+
+    # Per-controller parameters.
+    lookahead:
+      base_frame: base_link
+      kp_xy: 1.0
+      kp_yaw: 1.2
+      max_speed_xy: 0.25
+      max_speed_yaw: 0.8
+      lookahead_dist: 0.40
+      linear_threshold_for_wz: 0.01
+      max_wz_when_moving: 0.0
+      use_diff_drive: false
+      goal_xy_tolerance: 0.05
+      goal_yaw_tolerance: 0.10
+      goal_stateful: true
