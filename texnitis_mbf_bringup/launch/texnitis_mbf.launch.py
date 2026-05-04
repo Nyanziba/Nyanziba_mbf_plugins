@@ -38,7 +38,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="mbf_simple_nav",
-                executable="mbf_simple_nav",
+                executable="mbf_simple_nav_node",
                 name="move_base_flex",
                 output="screen",
                 parameters=[
