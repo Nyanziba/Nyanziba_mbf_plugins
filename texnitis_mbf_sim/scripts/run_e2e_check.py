@@ -26,6 +26,7 @@ from typing import Optional
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -70,6 +71,23 @@ class E2EChecker(Node):
         self._exit_code: Optional[int] = None
         self._status_label = "pending"
 
+        # Track odometry so we can confirm the sim node has started
+        # publishing TF before sending a goal. mbf rejects goals when
+        # the map -> base_link lookup is younger than the goal stamp.
+        self._got_odom = False
+        self._odom_sub = self.create_subscription(
+            Odometry, "/odom", self._on_odom, 10
+        )
+
+    def _on_odom(self, _msg: Odometry) -> None:
+        self._got_odom = True
+
+    def _wait_for_odom(self, timeout_sec: float) -> bool:
+        deadline = self.get_clock().now().nanoseconds + int(timeout_sec * 1e9)
+        while not self._got_odom and self.get_clock().now().nanoseconds < deadline:
+            rclpy.spin_once(self, timeout_sec=0.1)
+        return self._got_odom
+
     def run(self) -> int:
         self.get_logger().info(
             f"waiting up to {self._server_wait_sec:.0f}s for action server "
@@ -78,6 +96,16 @@ class E2EChecker(Node):
         if not self._client.wait_for_server(timeout_sec=self._server_wait_sec):
             self.get_logger().error("action server never came up")
             return 2
+
+        # Block until /odom is flowing (sim node up, tf broadcast active),
+        # then give tf2 a buffer of past samples so a fresh goal stamp
+        # falls within the buffered window.
+        if not self._wait_for_odom(timeout_sec=10.0):
+            self.get_logger().error("no /odom seen within 10s; sim node not running?")
+            return 6
+        end_warmup = self.get_clock().now().nanoseconds + int(1.5 * 1e9)
+        while self.get_clock().now().nanoseconds < end_warmup:
+            rclpy.spin_once(self, timeout_sec=0.05)
 
         goal_msg = MoveBase.Goal()
         goal_msg.target_pose = self._make_pose_stamped(*self._goal_xyyaw)

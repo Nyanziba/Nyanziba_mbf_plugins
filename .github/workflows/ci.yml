@@ -267,6 +267,9 @@ jobs:
           # Skip every mbf_* package: install_mbf/setup.bash already exposes
           # them via AMENT_PREFIX_PATH, so find_package(mbf_*) resolves there
           # and we avoid rebuilding upstream sources every push.
+          # nav_core was built without MPPI to avoid the CasADi dependency,
+          # so the MPPI controller adapter cannot link. Disable it; the
+          # E2E check exercises AStar + Lookahead which is what we need.
           colcon build \
               --packages-up-to texnitis_mbf_sim \
               --packages-ignore-regex '^mbf_.*' \
@@ -274,6 +277,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                -DBUILD_MPPI_CONTROLLER=OFF \
                 -Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR
           ccache --show-stats | head -30
       - name: Run sim E2E (one goal, success expected)
