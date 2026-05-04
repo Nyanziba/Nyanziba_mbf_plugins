@@ -20,14 +20,14 @@ docs/                       # architecture / design_rationale / reading_guide / 
 ## 上流依存
 
 - ROS 2: **Jazzy Jalisco** 想定（Ubuntu 24.04）
-- 別リポ: [`Nyanziba/texnitis_nav_core`](https://github.com/Nyanziba/texnitis_nav_core) を `find_package(texnitis_nav_core)` で取り込む（PRIVATE link）
+- 別リポ: [`Nyanziba/texnitis_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core) を `find_package(texnitis_nav_core)` で取り込む（PRIVATE link）
 - 上流: `naturerobots/move_base_flex` の `ros2` ブランチを `third_party/move_base_flex.repos` で SHA 固定
 
 ## ビルド
 
 ```bash
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-git clone https://github.com/Nyanziba/texnitis_nav_core.git
+git clone https://github.com/Nyanziba/Nyanziba_nav_core.git
 git clone <this-repo-url>
 vcs import < texnitis_mbf_plugins/third_party/move_base_flex.repos
 

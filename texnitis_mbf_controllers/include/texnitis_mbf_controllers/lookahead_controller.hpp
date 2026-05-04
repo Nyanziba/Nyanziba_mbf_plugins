@@ -56,6 +56,13 @@ class LookaheadController final : public mbf_simple_core::SimpleController {
     ::texnitis::nav_core::Pose2D last_pose_{};
 
     std::atomic<bool> cancel_requested_{false};
+
+    /// State-trace counters. Logged once per N invocations (throttle) so
+    /// we can see in CI whether computeVelocityCommands is being called,
+    /// whether setPlan landed a path, and what isGoalReached returns.
+    std::size_t compute_calls_{0};
+    std::size_t set_plan_calls_{0};
+    std::size_t cached_path_size_{0};
 };
 
 }  // namespace texnitis::mbf_controllers

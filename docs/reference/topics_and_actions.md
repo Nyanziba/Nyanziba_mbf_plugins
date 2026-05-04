@@ -44,7 +44,7 @@
 
 各プラグインのパラメータは `<plugin_name>.*` プレフィックスで宣言されます。
 完全な一覧は [parameter_mapping.md](../usage/parameter_mapping.md) と
-[texnitis_nav_core/docs/usage/parameters.md](https://github.com/Nyanziba/texnitis_nav_core/blob/main/docs/usage/parameters.md)。
+[texnitis_nav_core/docs/usage/parameters.md](https://github.com/Nyanziba/Nyanziba_nav_core/blob/main/docs/usage/parameters.md)。
 
 ## tools / webui の topic
 

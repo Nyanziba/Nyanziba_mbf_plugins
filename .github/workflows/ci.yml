@@ -31,6 +31,7 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           cd $GITHUB_WORKSPACE
           colcon list --packages-up-to texnitis_mbf_bringup
+          colcon list --packages-select texnitis_mbf_sim
       - name: package.xml well-formed
         shell: bash
         run: |
@@ -79,6 +80,8 @@ jobs:
           PY
       - name: Pytest (texnitis_mbf_tools)
         run: pytest texnitis_mbf_tools/test -v
+      - name: Pytest (texnitis_mbf_sim)
+        run: pytest texnitis_mbf_sim/test -v
 
   yaml-and-launch:
     name: YAML lint + launch.py syntax
@@ -99,6 +102,7 @@ jobs:
           from pathlib import Path
           ok = True
           patterns = ('texnitis_mbf_bringup/config/*.yaml',
+                      'texnitis_mbf_sim/config/*.yaml',
                       'demo/maps/*.yaml',
                       'demo/waypoints/*.yaml',
                       'third_party/*.repos')
@@ -128,13 +132,190 @@ jobs:
           sys.exit(0 if ok else 1)
           PY
 
-  # A real `colcon build` job that needs both repos checked out lives in
-  # ../tools/local-build.md as a developer recipe. We do not run it here
-  # because texnitis_nav_core is private and giving a CI workflow a PAT
-  # that can clone private repos is heavier than the benefit at this
-  # stage. Once nav_core goes public (or a dedicated NAV_CORE_TOKEN is
-  # provisioned) we'll uncomment this job.
-  #
-  # build:
-  #   name: colcon build
-  #   ...
+  sim-e2e:
+    name: ROS 2 sim end-to-end (jazzy)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container:
+      image: osrf/ros:jazzy-desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/texnitis_mbf_plugins
+      - name: Install build tooling
+        shell: bash
+        run: |
+          set -e
+          apt-get update
+          apt-get install -y --no-install-recommends \
+              python3-vcstool \
+              python3-colcon-common-extensions \
+              python3-pytest \
+              libeigen3-dev \
+              build-essential \
+              cmake \
+              ccache \
+              git
+      - name: vcs import upstream sources
+        shell: bash
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE
+          vcs import src < src/texnitis_mbf_plugins/third_party/move_base_flex.repos
+          vcs import src < src/texnitis_mbf_plugins/third_party/texnitis_nav_core.repos
+          ls src
+      - name: Resolve upstream SHAs for cache keys
+        id: upstream_shas
+        shell: bash
+        run: |
+          set -e
+          nav_core_sha=$(git -C $GITHUB_WORKSPACE/src/texnitis_nav_core rev-parse HEAD)
+          mbf_sha=$(git -C $GITHUB_WORKSPACE/src/move_base_flex rev-parse HEAD)
+          echo "nav_core_sha=$nav_core_sha" >> $GITHUB_OUTPUT
+          echo "mbf_sha=$mbf_sha" >> $GITHUB_OUTPUT
+          echo "nav_core: $nav_core_sha"
+          echo "move_base_flex: $mbf_sha"
+      - name: Cache nav_core install tree
+        id: cache_nav_core
+        uses: actions/cache@v4
+        with:
+          path: install_nav_core
+          key: nav-core-jazzy-${{ steps.upstream_shas.outputs.nav_core_sha }}-mppi-off
+      - name: Cache mbf install tree
+        id: cache_mbf
+        uses: actions/cache@v4
+        with:
+          path: install_mbf
+          key: mbf-jazzy-${{ steps.upstream_shas.outputs.mbf_sha }}-merge
+      - name: Cache ccache directory
+        uses: actions/cache@v4
+        with:
+          path: /github/home/.ccache
+          key: ccache-jazzy-${{ github.sha }}
+          restore-keys: |
+            ccache-jazzy-
+      - name: Configure ccache
+        shell: bash
+        run: |
+          set -e
+          # Put ccache shims first so colcon's invocations of gcc/g++ are
+          # transparently cached. 2 GB cap is plenty for the mbf workspace.
+          export PATH=/usr/lib/ccache:$PATH
+          mkdir -p /github/home/.ccache
+          ccache --max-size=2G
+          ccache --zero-stats
+          ccache --show-config | head -20
+      - name: Resolve apt deps with rosdep
+        shell: bash
+        run: |
+          set -e
+          source /opt/ros/jazzy/setup.bash
+          cd $GITHUB_WORKSPACE
+          rosdep update --rosdistro=jazzy
+          rosdep install --from-paths src --ignore-src -r -y \
+              --rosdistro=jazzy \
+              --skip-keys "texnitis_nav_core"
+      - name: Build texnitis_nav_core (if cache miss)
+        if: steps.cache_nav_core.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -e
+          export PATH=/usr/lib/ccache:$PATH
+          cd $GITHUB_WORKSPACE
+          cmake -S src/texnitis_nav_core -B build_nav_core \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DNAV_CORE_WITH_MPPI=OFF \
+              -DNAV_CORE_BUILD_PYTHON=OFF \
+              -DNAV_CORE_BUILD_TESTS=OFF \
+              -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install_nav_core
+          cmake --build build_nav_core -j2
+          cmake --install build_nav_core
+          ccache --show-stats | head -20
+      - name: Build move_base_flex into install_mbf (if cache miss)
+        if: steps.cache_mbf.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -e
+          source /opt/ros/jazzy/setup.bash
+          export PATH=/usr/lib/ccache:$PATH
+          cd $GITHUB_WORKSPACE
+          # Build mbf into a private prefix keyed on its SHA. --merge-install
+          # collapses everything into one install_mbf/{lib,share,...} so the
+          # cached blob is small and a single `source install_mbf/setup.bash`
+          # gets the entire upstream onto AMENT_PREFIX_PATH.
+          colcon build \
+              --base-paths src/move_base_flex \
+              --build-base build_mbf \
+              --install-base install_mbf \
+              --merge-install \
+              --packages-up-to mbf_simple_nav \
+              --cmake-args \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          ccache --show-stats | head -20
+      - name: Build texnitis packages on top of install_mbf
+        shell: bash
+        run: |
+          set -e
+          source /opt/ros/jazzy/setup.bash
+          source $GITHUB_WORKSPACE/install_mbf/setup.bash
+          export PATH=/usr/lib/ccache:$PATH
+          export texnitis_nav_core_DIR=$GITHUB_WORKSPACE/install_nav_core/lib/cmake/texnitis_nav_core
+          export CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install_nav_core:$CMAKE_PREFIX_PATH
+          cd $GITHUB_WORKSPACE
+          # Skip every mbf_* package: install_mbf/setup.bash already exposes
+          # them via AMENT_PREFIX_PATH, so find_package(mbf_*) resolves there
+          # and we avoid rebuilding upstream sources every push.
+          # nav_core was built without MPPI to avoid the CasADi dependency,
+          # so the MPPI controller adapter cannot link. Disable it; the
+          # E2E check exercises AStar + Lookahead which is what we need.
+          colcon build \
+              --packages-up-to texnitis_mbf_sim \
+              --packages-ignore-regex '^mbf_.*' \
+              --cmake-args \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                -DBUILD_MPPI_CONTROLLER=OFF \
+                -Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR
+          ccache --show-stats | head -30
+      - name: Run sim E2E (one goal, success expected)
+        shell: bash
+        run: |
+          set -e
+          source /opt/ros/jazzy/setup.bash
+          source $GITHUB_WORKSPACE/install_mbf/setup.bash
+          source $GITHUB_WORKSPACE/install/setup.bash
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/install_nav_core/lib:$LD_LIBRARY_PATH
+          # ROS 2 launch's Shutdown handler swallows the e2e checker's
+          # non-zero exit, so we route the verdict through a sentinel file.
+          export MBF_E2E_RESULT_FILE=$GITHUB_WORKSPACE/e2e_result.txt
+          rm -f "$MBF_E2E_RESULT_FILE"
+          # Headless: no DISPLAY, no GUI. Hard ceiling at 180s in case the
+          # launch's own 90s timeout doesn't fire (e.g. spinning subprocess).
+          timeout --signal=SIGTERM --kill-after=15s 180s \
+              ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py \
+                  e2e_check:=true \
+                  goal_x:=2.5 goal_y:=0.5 goal_yaw:=0.0 \
+                  overall_timeout_s:=90.0 || true
+          echo "--- e2e verdict ---"
+          if [ ! -f "$MBF_E2E_RESULT_FILE" ]; then
+            echo "::error::e2e checker never wrote $MBF_E2E_RESULT_FILE; the launch likely died before reaching the verdict step."
+            exit 1
+          fi
+          verdict=$(cat "$MBF_E2E_RESULT_FILE")
+          echo "e2e checker exit code: $verdict"
+          if [ "$verdict" != "0" ]; then
+            echo "::error::sim-e2e failed (exit code $verdict)"
+            exit 1
+          fi
+      - name: Upload colcon logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: colcon-logs
+          path: |
+            log/
+            build/
+          retention-days: 7

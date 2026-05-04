@@ -14,6 +14,7 @@ graph TD
     controllers[texnitis_mbf_controllers<br/>SimpleController adapters]
     bringup[texnitis_mbf_bringup<br/>launch / config]
     tools[texnitis_mbf_tools<br/>waypoint_sender / nav_state_publisher / mbf_action_bridge]
+    sim[texnitis_mbf_sim<br/>flat_world_sim_node / run_e2e_check]
     webui[texnitis_mbf_webui<br/>HTML / JS / rosbridge launch]
   end
 
@@ -31,6 +32,7 @@ graph TD
   bringup --> planners
   bringup --> controllers
   tools -- "ActionClient" --> mbf
+  sim -- "/cmd_vel /odom /tf" --> mbf
   webui -- "rosbridge" --> mbf
 ```
 
@@ -43,6 +45,7 @@ graph TD
 | `texnitis_mbf_controllers` | `SimpleController` を継承する **薄い** アダプタ。実体は nav_core | ament_cmake (SHARED) |
 | `texnitis_mbf_bringup` | mbf を立ち上げる launch + yaml | ament_cmake (純 launch) |
 | `texnitis_mbf_tools` | mbf アクションを叩く Python ツール群 | ament_cmake + ament_cmake_python |
+| `texnitis_mbf_sim` | 軽量 2D ROS 2 シム + 1 ゴール E2E チェック（CI 用） | ament_cmake + ament_cmake_python |
 | `texnitis_mbf_webui` | HTML/JS の WebUI と rosbridge launch | ament_cmake (静的アセット) |
 
 ## 1 ゴール走破の流れ

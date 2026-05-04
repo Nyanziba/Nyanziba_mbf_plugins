@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>texnitis_mbf_sim</name>
+  <version>0.0.1</version>
+  <description>
+    Lightweight 2D ROS 2 simulator for the texnitis mbf navigation stack.
+    Subscribes /cmd_vel, integrates a holonomic / mecanum kinematic model,
+    publishes /odom and tf(map -> odom -> base_link). Intended for headless
+    CI E2E checks; no Gazebo dependency.
+  </description>
+  <maintainer email="katsuya.honda@oedodynamics.co.jp">Nyanziba</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>mbf_msgs</exec_depend>
+
+  <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+
+  <exec_depend>texnitis_mbf_bringup</exec_depend>
+  <exec_depend>texnitis_mbf_tools</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

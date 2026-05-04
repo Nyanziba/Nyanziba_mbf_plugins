@@ -38,13 +38,18 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="mbf_simple_nav",
-                executable="mbf_simple_nav",
+                executable="mbf_simple_nav_node",
                 name="move_base_flex",
                 output="screen",
                 parameters=[
                     params_file,
                     {"use_sim_time": use_sim_time},
                 ],
+                # mbf publishes velocity commands on its private `~/cmd_vel`
+                # (= /move_base_flex/cmd_vel by default). Remap to the global
+                # /cmd_vel that wheel drivers and our flat_world_sim listen on.
+                # Absolute form works regardless of node-name overrides.
+                remappings=[("/move_base_flex/cmd_vel", "/cmd_vel")],
             ),
         ]
     )

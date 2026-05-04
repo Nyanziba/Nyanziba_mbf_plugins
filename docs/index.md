@@ -3,7 +3,7 @@
 `naturerobots/move_base_flex`（ros2 ブランチ）に対応する planner / controller
 プラグイン群と、bringup・WebUI・waypoint sender などのツールを提供する。
 コアアルゴリズムは別リポ
-[`texnitis_nav_core`](https://github.com/Nyanziba/texnitis_nav_core)
+[`texnitis_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core)
 に置かれており、本リポは **薄いアダプタ** に徹する。
 
 ## 読み始め
@@ -16,6 +16,8 @@
 | WebUI の使い方 | [usage/webui.md](usage/webui.md) |
 | ウェイポイント走行 | [usage/waypoint_sender.md](usage/waypoint_sender.md) |
 | 自作プラグインを足す | [usage/custom_plugin.md](usage/custom_plugin.md) |
+| ROS 2 シム + E2E チェック | [usage/sim_e2e.md](usage/sim_e2e.md) |
+| macOS ネイティブ実行 (pixi) | [usage/local_pixi.md](usage/local_pixi.md) |
 | 全体像をつかむ | [architecture.md](architecture.md) |
 | なぜこの設計なのか | [design_rationale.md](design_rationale.md) |
 | ソースの読み方 | [reading_guide.md](reading_guide.md) |
@@ -24,7 +26,7 @@
 
 ## 関連リポジトリ
 
-- [`texnitis_nav_core`](https://github.com/Nyanziba/texnitis_nav_core) — コアアルゴリズム（ROS 非依存）
+- [`texnitis_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core) — コアアルゴリズム（ROS 非依存）
 - [`naturerobots/move_base_flex`](https://github.com/naturerobots/move_base_flex) — 上流の mbf 本体（ros2 ブランチ）
 
 ## ライセンス

@@ -1,0 +1,44 @@
+[workspace]
+name = "texnitis_mbf_plugins"
+description = "Local pixi env for the mbf navigation stack (macOS-friendly, ROS 2 Jazzy via RoboStack)"
+authors = ["Nyanziba"]
+channels = ["robostack-jazzy", "conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+# ROS 2 + colcon toolchain
+ros-jazzy-desktop = "*"
+colcon-common-extensions = "*"
+rosdep = "*"
+vcstool = "*"
+
+# Build tooling
+cmake = "*"
+ninja = "*"
+make = "*"
+compilers = "*"
+pkg-config = "*"
+
+# Algorithms / math
+eigen = "*"
+
+# nav2 pieces used by the demo launch
+ros-jazzy-nav2-map-server = "*"
+ros-jazzy-nav2-lifecycle-manager = "*"
+ros-jazzy-pluginlib = "*"
+
+# Python deps for tools/sim helpers
+python = ">=3.11,<3.13"
+pyyaml = "*"
+pytest = "*"
+numpy = "*"
+
+[tasks]
+# Each task delegates to a real bash script under scripts/pixi/, since
+# pixi's deno-task-shell does not implement `<` redirection or `&&`-chained
+# subshells the way bash does.
+setup = "bash scripts/pixi/setup.sh"
+build = "bash scripts/pixi/build.sh"
+sim-e2e = "bash scripts/pixi/sim_e2e.sh"
+sim-interactive = "bash scripts/pixi/sim_interactive.sh"
+test = "pytest texnitis_mbf_sim/test texnitis_mbf_tools/test"
