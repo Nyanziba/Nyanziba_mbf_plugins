@@ -28,6 +28,7 @@ find_package(texnitis_nav_core REQUIRED CONFIG)
 
 add_library(texnitis_mbf_planners SHARED
     src/astar_planner.cpp
+    src/height_aware_astar_planner.cpp
 )
 
 target_include_directories(texnitis_mbf_planners

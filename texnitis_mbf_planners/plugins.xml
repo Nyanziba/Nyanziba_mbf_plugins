@@ -8,4 +8,15 @@
       in the configured global frame.
     </description>
   </class>
+  <class type="texnitis::mbf_planners::HeightAwareAStarPlanner"
+         base_class_type="mbf_simple_core::SimplePlanner">
+    <description>
+      Height-aware A* grid planner. Subscribes /map and /height_grid via
+      MapProvider / HeightMapProvider. Cells whose height value meets
+      `&lt;name&gt;.height_lethal_threshold` are merged into the occupancy
+      grid as occupied before A* runs. Returns NotInitialized when the
+      height topic has not delivered yet and `require_height_grid` is
+      true (the default).
+    </description>
+  </class>
 </library>

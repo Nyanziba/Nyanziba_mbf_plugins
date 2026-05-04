@@ -9,4 +9,14 @@
       wobble cannot un-set the xy-reached flag.
     </description>
   </class>
+  <class type="texnitis::mbf_controllers::DiffDrivePurePursuitController"
+         base_class_type="mbf_simple_core::SimpleController">
+    <description>
+      Differential drive pure pursuit with speed-scaled lookahead and
+      acceleration limits. Delegates to
+      texnitis_nav_core::DiffDrivePurePursuitController. Always emits
+      vy=0; configure max_acceleration and max_angular_acceleration to
+      match the actuators.
+    </description>
+  </class>
 </library>

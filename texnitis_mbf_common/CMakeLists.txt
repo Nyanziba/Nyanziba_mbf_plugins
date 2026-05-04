@@ -24,6 +24,7 @@ find_package(texnitis_nav_core REQUIRED CONFIG)
 
 add_library(texnitis_mbf_common SHARED
     src/map_provider.cpp
+    src/height_map_provider.cpp
 )
 
 target_include_directories(texnitis_mbf_common
