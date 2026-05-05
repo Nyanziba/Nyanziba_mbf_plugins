@@ -3,6 +3,26 @@
 Docker を経由せず、Apple Silicon でネイティブに動かすための pixi セットアップ。
 RoboStack の conda チャンネルで ROS 2 Jazzy を取り込みます。
 
+## 重要: macOS では `scripts/pixi/activate.sh` が必須
+
+`pixi run` は PATH と `CONDA_PREFIX` を立てるだけで、conda-forge の
+`activate.d` スクリプト群（`CC`, `CXX`, `SDKROOT`, `MACOSX_DEPLOYMENT_TARGET`
+を設定）を必ずしも source しません。さらに macOS の SIP は
+`/usr/bin/env python3` shebang で `DYLD_LIBRARY_PATH` を strip するため、
+rclpy が ROS の typesupport dylib を dlopen できず
+`UnsupportedTypeSupport: Could not import 'rosidl_typesupport_c'` で落ちます。
+
+[`scripts/pixi/activate.sh`](../../scripts/pixi/activate.sh) は:
+- `activate.d/*.sh` を一括 source して `CC` / `CXX` / `SDKROOT` を立てる
+- `Python3_EXECUTABLE` を env の `python3.12` に固定
+- `MACOSX_DEPLOYMENT_TARGET=11.0` を保証
+- `fix_shebangs()` で `install/<pkg>/lib/*.py` の shebang を env の python に書き換え（colcon が毎回 `/usr/bin/env` に戻すので build 後に必ず実行）
+- 便利関数 `cb` （= `colcon build` + `fix_shebangs`）を提供
+
+`pixi run build` / `pixi run sim-e2e` / `pixi run sim-interactive` は
+このスクリプトを内部で source するので、通常は意識せず使えます。
+手動で `colcon build` するときだけ `source scripts/pixi/activate.sh` してから。
+
 ## 前提
 
 - [pixi](https://pixi.sh) (>= 0.40)
@@ -40,12 +60,17 @@ pixi run test
 | `colcon build` が `find_package(mbf_simple_core)` で失敗 | `pixi run setup` を再実行して `src/move_base_flex` が消えていないか確認 |
 | 起動するが `outcome=58 (TF_ERROR)` | ホスト時計と launch 内の `use_sim_time` が噛み合っていない。`pixi run sim-e2e` を `--use_sim_time:=false` で（既定値） |
 | AppleSilicon でクラッシュ | RoboStack の osx-arm64 build に当該パッケージがあるか確認。無ければ条件付きで `pixi run sim-interactive --controller=lookahead` で MPPI を回避 |
-| `UnsupportedTypeSupport: Could not import 'rosidl_typesupport_c' for package 'mbf_msgs'` | RoboStack の rosidl_typesupport ABI が workspace 生成のメッセージと噛み合わない既知の制限。回避策は Docker (`docs/usage/sim_e2e.md`) で動かすか、workspace 生成時に `--cmake-args -DROSIDL_TYPESUPPORT_IMPL=...` で RoboStack 側に揃える（実験的） |
+| `UnsupportedTypeSupport: Could not import 'rosidl_typesupport_c' for package 'mbf_msgs'` | macOS SIP が `/usr/bin/env python3` shebang で `DYLD_LIBRARY_PATH` を strip するのが原因。`scripts/pixi/activate.sh` の `fix_shebangs` が自動で対処するので、`colcon build` を直接叩いた場合のみ手動で `fix_shebangs` を実行してください |
+| 終了時 `mbf_simple_nav_node ... exit code -11` | E2E PASS 判定後のシャットダウン時に発生する SEGV。launch shutdown 中のクリーンアップ順に起因し、E2E 結果には影響しません |
 
-## 既知の制限
+## ネイティブ実行の検証済み所要時間（M1 Pro）
 
-- `pixi run sim-e2e` / `sim-interactive`: 上記の typesupport 問題で macOS では完全には動かない可能性があります。CI と同じ Docker 経由なら確実です（[sim_e2e.md](sim_e2e.md)）。
-- `pixi run build` と `pixi run test`（純 Python ユニット）は安定して動きます。ローカルでロジック確認したいときに使ってください。
+| ステップ | 時間 |
+|---|---|
+| `pixi install` (初回) | ~30 s |
+| `pixi run setup` | ~10 s |
+| `pixi run build` (cold) | ~2 min 18 s |
+| `pixi run sim-e2e` | ~14 s（goal 送信から到達まで） |
 
 ## なぜ Docker ではないのか
 

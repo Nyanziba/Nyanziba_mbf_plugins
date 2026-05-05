@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 # Two-stage build: nav_core (plain cmake) then the rest of the workspace
 # (colcon). Re-using install_nav_core when present keeps warm builds fast.
-set -euo pipefail
+#
+# Sources scripts/pixi/activate.sh first so CC/CXX/SDKROOT and the conda
+# activate.d hooks are in place before cmake / colcon run, and rewrites
+# Python shebangs at the end so rclpy nodes survive macOS SIP.
+set -eo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# shellcheck source=./activate.sh
+source "${SCRIPT_DIR}/activate.sh"
 
 if [ ! -f install_nav_core/lib/libtexnitis_nav_core.a ]; then
     cmake -S src/texnitis_nav_core -B build_nav_core \
@@ -19,15 +27,16 @@ fi
 export texnitis_nav_core_DIR="$(pwd)/install_nav_core/lib/cmake/texnitis_nav_core"
 export CMAKE_PREFIX_PATH="$(pwd)/install_nav_core:${CMAKE_PREFIX_PATH:-}"
 
-# CMake's FindPython3 sometimes picks the system /opt/homebrew Python
-# over the conda env one. Pin to the pixi env's interpreter so
-# rosidl_generator_py finds matching numpy headers.
-PYTHON3_EXEC="${CONDA_PREFIX:-$PIXI_PROJECT_ROOT/.pixi/envs/default}/bin/python3"
-
+# Plain (non-symlink) install on macOS so fix_shebangs operates on copies
+# in install/<pkg>/lib/ instead of editing the source tree through symlinks.
 colcon build \
     --packages-up-to texnitis_mbf_sim mbf_simple_nav \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_MPPI_CONTROLLER=OFF \
-    "-DPython3_EXECUTABLE=$PYTHON3_EXEC" \
-    "-DPython3_ROOT_DIR=$(dirname $(dirname $PYTHON3_EXEC))" \
+    "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" \
+    "-DPython3_ROOT_DIR=${Python3_ROOT_DIR}" \
     "-Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR"
+
+# colcon writes shebangs back to /usr/bin/env python3; pin them to the env's
+# interpreter so SIP does not strip DYLD_LIBRARY_PATH at exec().
+fix_shebangs
