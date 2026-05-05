@@ -42,3 +42,18 @@ build = "bash scripts/pixi/build.sh"
 sim-e2e = "bash scripts/pixi/sim_e2e.sh"
 sim-interactive = "bash scripts/pixi/sim_interactive.sh"
 test = "pytest texnitis_mbf_sim/test texnitis_mbf_tools/test"
+
+# Drop into an interactive subshell with the env, install/, and DYLD path
+# already configured. Use $SHELL so zsh users get zsh and AMENT_SHELL is
+# set to match (no `_python_argcomplete: command not found` on tab).
+shell = "bash scripts/pixi/shell.sh"
+
+# Print the exact `source ...` line for users who want to inject the env
+# into their *current* shell instead of a subshell. Output is plain text,
+# safe for `eval "$(pixi run activate-cmd)"`.
+activate-cmd = '''echo "source $PIXI_PROJECT_ROOT/scripts/pixi/activate.sh"'''
+
+# One-off ros2 invocation under the activated env. e.g.
+#   pixi run ros2 topic list
+#   pixi run ros2 topic echo /move_base_flex/astar/plan
+ros2 = "bash scripts/pixi/ros2_wrap.sh"

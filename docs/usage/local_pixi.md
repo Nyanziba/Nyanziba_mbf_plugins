@@ -52,6 +52,25 @@ pixi run sim-interactive
 pixi run test
 ```
 
+## 対話的に操作したいとき
+
+```bash
+# env + workspace install + DYLD_LIBRARY_PATH を整えたサブシェルに入る
+# ($SHELL を尊重するので zsh 利用者は zsh のまま)
+pixi run shell
+ros2 topic list
+ros2 topic echo /move_base_flex/astar/plan
+exit  # サブシェルを抜ける
+
+# あるいは現在のシェルに env を注入したい場合（rc を汚さない）
+eval "$(pixi run activate-cmd)"
+
+# 単発で ros2 を呼びたいだけのとき
+pixi run ros2 topic list
+pixi run ros2 action send_goal /move_base_flex/move_base mbf_msgs/action/MoveBase \
+    "{target_pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0}}}, planner: 'astar', controller: 'lookahead'}"
+```
+
 ## トラブルシュート
 
 | 症状 | 原因と対処 |
