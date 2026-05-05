@@ -18,6 +18,7 @@ install(PROGRAMS
     scripts/waypoint_sender.py
     scripts/mbf_action_bridge.py
     scripts/nav_state_publisher.py
+    scripts/rviz_goal_bridge.py
     DESTINATION lib/${PROJECT_NAME}
 )
 

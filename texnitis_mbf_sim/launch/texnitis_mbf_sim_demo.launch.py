@@ -72,6 +72,16 @@ def generate_launch_description() -> LaunchDescription:
         description="Hard deadline for the e2e check (seconds).",
     )
 
+    rviz_bridge = LaunchConfiguration("rviz_bridge")
+    declare_rviz_bridge = DeclareLaunchArgument(
+        "rviz_bridge",
+        default_value="false",
+        description=(
+            "Spawn rviz_goal_bridge: forwards rviz2 '2D Goal Pose' "
+            "(/goal_pose) to /move_base_flex/move_base."
+        ),
+    )
+
     map_server = Node(
         package="nav2_map_server",
         executable="map_server",
@@ -96,7 +106,7 @@ def generate_launch_description() -> LaunchDescription:
         name="flat_world_sim",
         output="screen",
         parameters=[
-            {"update_rate": 50.0, "initial_pose": [0.5, 0.5, 0.0]},
+            {"update_rate": 50.0, "initial_pose": [0.1, 0.1, 1.3]},
         ],
     )
 
@@ -136,6 +146,23 @@ def generate_launch_description() -> LaunchDescription:
         condition=IfCondition(e2e_check),
     )
 
+    rviz_goal_bridge_node = Node(
+        package="texnitis_mbf_tools",
+        executable="rviz_goal_bridge.py",
+        name="rviz_goal_bridge",
+        output="screen",
+        condition=IfCondition(rviz_bridge),
+        parameters=[
+            {
+                "goal_topic": "/goal_pose",
+                "action_name": "/move_base_flex/move_base",
+                "planner": "astar",
+                "controller": "lookahead",
+                "cancel_on_new": True,
+            }
+        ],
+    )
+
     return LaunchDescription(
         [
             declare_map_yaml,
@@ -145,11 +172,13 @@ def generate_launch_description() -> LaunchDescription:
             declare_goal_y,
             declare_goal_yaw,
             declare_timeout,
+            declare_rviz_bridge,
             map_server,
             lifecycle_manager,
             sim_node,
             mbf_launch,
             e2e_node,
             shutdown_on_check_exit,
+            rviz_goal_bridge_node,
         ]
     )
