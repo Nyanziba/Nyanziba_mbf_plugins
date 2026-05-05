@@ -32,6 +32,17 @@ fi
 export CONDA_PREFIX="${PIXI_ENV_PREFIX}"
 export CMAKE_PREFIX_PATH="${PIXI_ENV_PREFIX}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
 
+# ament's setup.sh dispatches to local_setup.<AMENT_SHELL>; without this the
+# bash argcomplete files (`complete -F _python_argcomplete ros2`) get sourced
+# into an interactive zsh and tab-completing `ros2 <tab>` produces
+# "_python_argcomplete: command not found". Detect zsh and ask ament to use
+# its zsh-flavoured (compdef-based) argcomplete files instead.
+if [ -n "${ZSH_VERSION:-}" ]; then
+    export AMENT_SHELL=zsh
+elif [ -n "${BASH_VERSION:-}" ]; then
+    export AMENT_SHELL=bash
+fi
+
 # Source every conda-forge activate.d script. These set CC/CXX/AR/SDKROOT/
 # CFLAGS/CXXFLAGS/LDFLAGS/MACOSX_DEPLOYMENT_TARGET to values matching the
 # env's compilers, which is what rosidl + ament_cmake need to resolve cleanly.
