@@ -62,9 +62,15 @@ void AStarPlanner::initialize (const std::string             name,
         map_provider_->subscribe (map_topic_);
     }
 
+    // 計画完了ごとに `nav_msgs/Path` を publish する。topic 名は
+    // `<node>/<planner_name>/plan`（例: /move_base_flex/astar/plan）。
+    // transient_local QoS なので rviz2 が後から繋いでも最新計画を取れる。
+    plan_pub_ = node_handle->create_publisher<nav_msgs::msg::Path> (
+        name_ + "/plan", rclcpp::QoS (1).reliable ().transient_local ());
+
     RCLCPP_INFO (node_handle->get_logger (),
-                 "AStarPlanner '%s' initialized (map_topic=%s, global_frame=%s)",
-                 name_.c_str (), map_topic_.c_str (), global_frame_.c_str ());
+                 "AStarPlanner '%s' initialized (map_topic=%s, global_frame=%s, plan_topic=%s/plan)",
+                 name_.c_str (), map_topic_.c_str (), global_frame_.c_str (), name_.c_str ());
 }
 
 uint32_t AStarPlanner::makePlan (const geometry_msgs::msg::PoseStamped               &start,
@@ -113,6 +119,17 @@ uint32_t AStarPlanner::makePlan (const geometry_msgs::msg::PoseStamped          
     cost = 0.0;
     for (size_t i = 1; i < path_2d.poses.size (); ++i) {
         cost += nc::distanceXY (path_2d.poses[i - 1], path_2d.poses[i]);
+    }
+
+    // rviz2 / 外部監視向けに nav_msgs/Path として publish。mbf アクション
+    // 結果に乗る plan とは別経路で、購読者は最新計画を topic から直接
+    // 取れる（transient_local QoS）。
+    if (plan_pub_) {
+        nav_msgs::msg::Path path_msg;
+        path_msg.header.stamp    = stamp;
+        path_msg.header.frame_id = global_frame_;
+        path_msg.poses           = plan;
+        plan_pub_->publish (path_msg);
     }
     return ec::kSuccess;
 }

@@ -64,9 +64,12 @@ void HeightAwareAStarPlanner::initialize (const std::string             name,
         height_provider_->subscribe (height_topic_);
     }
 
+    plan_pub_ = node_handle->create_publisher<nav_msgs::msg::Path> (
+        name_ + "/plan", rclcpp::QoS (1).reliable ().transient_local ());
+
     RCLCPP_INFO (node_handle->get_logger (),
-                 "HeightAwareAStarPlanner '%s' initialized (map=%s height=%s)",
-                 name_.c_str (), map_topic_.c_str (), height_topic_.c_str ());
+                 "HeightAwareAStarPlanner '%s' initialized (map=%s height=%s plan=%s/plan)",
+                 name_.c_str (), map_topic_.c_str (), height_topic_.c_str (), name_.c_str ());
 }
 
 uint32_t HeightAwareAStarPlanner::makePlan (
@@ -113,6 +116,14 @@ uint32_t HeightAwareAStarPlanner::makePlan (
     cost = 0.0;
     for (size_t i = 1; i < path_2d.poses.size (); ++i) {
         cost += nc::distanceXY (path_2d.poses[i - 1], path_2d.poses[i]);
+    }
+
+    if (plan_pub_) {
+        nav_msgs::msg::Path path_msg;
+        path_msg.header.stamp    = stamp;
+        path_msg.header.frame_id = global_frame_;
+        path_msg.poses           = plan;
+        plan_pub_->publish (path_msg);
     }
     return ec::kSuccess;
 }

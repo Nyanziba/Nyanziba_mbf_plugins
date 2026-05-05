@@ -12,6 +12,7 @@
 #include <string>
 
 #include <mbf_simple_core/simple_planner.h>
+#include <nav_msgs/msg/path.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <texnitis_mbf_common/height_map_provider.hpp>
@@ -74,6 +75,9 @@ class HeightAwareAStarPlanner final : public mbf_simple_core::SimplePlanner {
     std::string map_topic_{"/map"};
     std::string height_topic_{"/height_grid"};
     std::string global_frame_{"map"};
+
+    /// rviz2 / 監視向けに `<planner_name>/plan` (`nav_msgs/Path`) を発行。
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
 
     std::atomic<bool> cancel_requested_{false};
 };

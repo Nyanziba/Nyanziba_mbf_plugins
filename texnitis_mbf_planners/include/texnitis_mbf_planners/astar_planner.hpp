@@ -16,6 +16,7 @@
 #include <string>
 
 #include <mbf_simple_core/simple_planner.h>
+#include <nav_msgs/msg/path.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <texnitis_mbf_common/map_provider.hpp>
@@ -48,6 +49,10 @@ class AStarPlanner final : public mbf_simple_core::SimplePlanner {
 
     std::string map_topic_{"/map"};
     std::string global_frame_{"map"};
+
+    /// rviz2 で `/<planner_name>/plan` を Path display に出すための
+    /// publisher。makePlan が Success を返すたびに発行する。
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
 
     std::atomic<bool> cancel_requested_{false};
 };

@@ -36,11 +36,13 @@ venv/
 src_imported/
 
 # pixi-managed workspace scratch (added by `pixi run setup`/`pixi run build`)
+# `/src/` (anchored) so colcon's `src/` at the repo root is ignored without
+# also masking the per-package `src/` source directories.
 .pixi/
 pixi.lock
-src/
-install_*/
-build_*/
+/src/
+/install_*/
+/build_*/
 
 # Editor / OS
 .vscode/
