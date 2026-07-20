@@ -44,6 +44,8 @@
 | `goal_xy_tolerance` | `goal_xy_tolerance`（mbf アクションの `dist_tolerance` も上書きするので注意） |
 | `goal_yaw_tolerance` | `goal_yaw_tolerance` |
 | `goal_stateful` | `goal_stateful` |
+| （旧実装になし） | `rotate_while_moving`（移動中にゴール yaw へ補間回頭。既定 false） |
+| （旧実装になし） | `rotate_while_moving_exponent`（補間カーブの冪指数。既定 2.0） |
 
 ## Differential Drive Pure Pursuit
 

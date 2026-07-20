@@ -18,7 +18,9 @@ texnitis_mbf_sim/
 ├── launch/
 │   └── texnitis_mbf_sim_demo.launch.py  # map_server + sim + mbf + e2e check
 ├── config/
-│   ├── corridor.yaml      # nav2_map_server 用
+│   ├── open_field.yaml    # 20x20 m オープンフィールド（既定・高速デモ用）
+│   ├── open_field.pgm
+│   ├── corridor.yaml      # 4x3 m 狭路（旧デモ、低速向け）
 │   └── corridor.pgm
 └── test/
     └── test_kinematics.py # pytest（ROS 不要）
@@ -33,13 +35,25 @@ source install/setup.bash
 ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py
 ```
 
-これだけで:
+これだけで（既定は 20x20 m オープンフィールドの高速デモ）:
 
-1. `nav2_map_server` が `config/corridor.yaml` を `/map` に流す
-2. `flat_world_sim` が `(0.5, 0.5, 0)` から起動して `/cmd_vel` を待つ
-3. `mbf_simple_nav` が AStar + Lookahead プラグインで起動
-4. `mbf_e2e_check` が `(3.0, 0.5, 0)` にゴールを 1 つ送る
+1. `nav2_map_server` が `config/open_field.yaml` を `/map` に流す
+2. `flat_world_sim` が `(1.0, 1.0, 0)` から起動して `/cmd_vel` を待つ
+3. `mbf_simple_nav` が AStar + Lookahead プラグイン
+   （`texnitis_mbf_highspeed.yaml`: `max_speed_xy` 2.0 m/s、
+   `rotate_while_moving` 有効）で起動
+4. `mbf_e2e_check` が対角 `(18.0, 18.0, yaw=90°)` にゴールを 1 つ送る。
+   ロボットは走りながらゴール yaw へ回頭する
 5. `outcome=0 (SUCCESS)` が返ったら launch 全体が `Shutdown()` する
+
+旧来の狭路・低速デモは次で再現できます:
+
+```bash
+ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py \
+    map_yaml:=<share>/texnitis_mbf_sim/config/corridor.yaml \
+    bringup_yaml:=<share>/texnitis_mbf_bringup/config/texnitis_mbf.yaml \
+    goal_x:=2.5 goal_y:=0.5 goal_yaw:=0.0
+```
 
 ノード終了コードがそのまま launch の終了コードになるので、
 **CI からはこの 1 launch を `timeout 180s` で起動するだけ** で合否が出ます。
@@ -59,10 +73,10 @@ ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py e2e_check:=false
 
 | 引数 | 既定値 | 意味 |
 |---|---|---|
-| `map_yaml` | `texnitis_mbf_sim/config/corridor.yaml` | `nav2_map_server` に渡す YAML |
-| `bringup_yaml` | `texnitis_mbf_bringup/config/texnitis_mbf.yaml` | mbf 用パラメータ |
+| `map_yaml` | `texnitis_mbf_sim/config/open_field.yaml` | `nav2_map_server` に渡す YAML |
+| `bringup_yaml` | `texnitis_mbf_bringup/config/texnitis_mbf_highspeed.yaml` | mbf 用パラメータ |
 | `e2e_check` | `true` | true なら 1 ゴール送って完了で全体 shutdown |
-| `goal_x` / `goal_y` / `goal_yaw` | `3.0` / `0.5` / `0.0` | 送るゴール |
+| `goal_x` / `goal_y` / `goal_yaw` | `18.0` / `18.0` / `1.5708` | 送るゴール |
 | `overall_timeout_s` | `90.0` | E2E チェックがあきらめるまでの上限 |
 
 ## シミュレータの中身（要点）
