@@ -1,0 +1,43 @@
+# 高速移動デモ用パラメータ (20 m x 20 m オープンフィールド想定)。
+# 実機用の texnitis_mbf.yaml とは独立。速度上限・lookahead を引き上げ、
+# rotate_while_moving で移動しながらゴール yaw へ回頭する。
+
+move_base_flex:
+  ros__parameters:
+    global_frame: map
+    robot_frame: base_link
+    controller_frequency: 20.0
+    planner_frequency: 1.0
+    cmd_vel_ignored_tolerance: 0.0
+    odom_topic: /odom
+
+    planners: ["astar"]
+    controllers: ["lookahead"]
+
+    astar:
+      type: "texnitis::mbf_planners::AStarPlanner"
+      map_topic: /map
+      global_frame: map
+      occupied_threshold: 65
+      unknown_is_obstacle: true
+      inflation_radius: 0.30
+      max_iterations: 0
+      heuristic_weight: 1.0
+      allow_diagonal: true
+
+    lookahead:
+      type: "texnitis::mbf_controllers::LookaheadController"
+      base_frame: base_link
+      kp_xy: 2.0
+      kp_yaw: 2.0
+      max_speed_xy: 2.0        # [m/s] 高速デモ。sim 側の max_linear_speed も揃えること
+      max_speed_yaw: 2.0       # [rad/s]
+      lookahead_dist: 1.0      # 高速でも経路先読みが破綻しないよう長め
+      linear_threshold_for_wz: 0.01
+      max_wz_when_moving: 0.0  # rotate_while_moving 時は不使用
+      use_diff_drive: false
+      rotate_while_moving: true
+      rotate_while_moving_exponent: 4.0  # 大きいほどゴール直前で一気に回る
+      goal_xy_tolerance: 0.10
+      goal_yaw_tolerance: 0.15
+      goal_stateful: true

@@ -47,14 +47,14 @@ def generate_launch_description() -> LaunchDescription:
     declare_map_yaml = DeclareLaunchArgument(
         "map_yaml",
         default_value=PathJoinSubstitution(
-            [sim_share, "config", "corridor.yaml"]
+            [sim_share, "config", "open_field.yaml"]
         ),
         description="nav2_map_server YAML to publish on /map",
     )
     declare_bringup_yaml = DeclareLaunchArgument(
         "bringup_yaml",
         default_value=PathJoinSubstitution(
-            [bringup_share, "config", "texnitis_mbf.yaml"]
+            [bringup_share, "config", "texnitis_mbf_highspeed.yaml"]
         ),
         description="mbf bringup parameters",
     )
@@ -63,9 +63,11 @@ def generate_launch_description() -> LaunchDescription:
         default_value="true",
         description="Run the one-shot e2e check and shutdown when it exits.",
     )
-    declare_goal_x = DeclareLaunchArgument("goal_x", default_value="3.0")
-    declare_goal_y = DeclareLaunchArgument("goal_y", default_value="0.5")
-    declare_goal_yaw = DeclareLaunchArgument("goal_yaw", default_value="0.0")
+    # 20x20 m フィールドを対角に横切り、移動しながらゴール yaw (90 deg)
+    # へ回頭する高速デモがデフォルト。
+    declare_goal_x = DeclareLaunchArgument("goal_x", default_value="18.0")
+    declare_goal_y = DeclareLaunchArgument("goal_y", default_value="18.0")
+    declare_goal_yaw = DeclareLaunchArgument("goal_yaw", default_value="1.5708")
     declare_timeout = DeclareLaunchArgument(
         "overall_timeout_s",
         default_value="90.0",
@@ -96,7 +98,14 @@ def generate_launch_description() -> LaunchDescription:
         name="flat_world_sim",
         output="screen",
         parameters=[
-            {"update_rate": 50.0, "initial_pose": [0.5, 0.5, 0.0]},
+            {
+                "update_rate": 50.0,
+                "initial_pose": [1.0, 1.0, 0.0],
+                # コントローラ側の max_speed_xy / max_speed_yaw
+                # (texnitis_mbf_highspeed.yaml) を飽和させない値に揃える。
+                "max_linear_speed": 2.5,
+                "max_angular_speed": 3.0,
+            },
         ],
     )
 

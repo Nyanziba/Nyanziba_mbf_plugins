@@ -1,0 +1,9 @@
+# 20 m x 20 m のオープンフィールド (200 x 200 セル, 0.1 m/セル)。
+# 外周 1 セルのみ壁。高速移動デモ用。
+image: open_field.pgm
+mode: trinary
+resolution: 0.1
+origin: [0.0, 0.0, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196

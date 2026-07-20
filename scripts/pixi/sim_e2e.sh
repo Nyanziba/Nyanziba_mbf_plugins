@@ -16,7 +16,9 @@ set -u
 export LD_LIBRARY_PATH="$(pwd)/install_nav_core/lib:${LD_LIBRARY_PATH:-}"
 export DYLD_LIBRARY_PATH="$(pwd)/install_nav_core/lib:${DYLD_LIBRARY_PATH:-}"
 
+# 20x20 m オープンフィールドを対角へ高速移動し、途中でゴール yaw へ
+# 回頭するデモ (launch のデフォルトと同じゴール)。
 ros2 launch texnitis_mbf_sim texnitis_mbf_sim_demo.launch.py \
     e2e_check:=true \
-    goal_x:=2.5 goal_y:=0.5 goal_yaw:=0.0 \
+    goal_x:=18.0 goal_y:=18.0 goal_yaw:=1.5708 \
     overall_timeout_s:=180.0

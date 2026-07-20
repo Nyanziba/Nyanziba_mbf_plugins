@@ -51,6 +51,10 @@ void LookaheadController::initialize (const std::string                  name,
         node_handle, name + ".max_wz_when_moving", params.max_wz_when_moving);
     params.use_diff_drive         = declareOrGet<bool> (
         node_handle, name + ".use_diff_drive", params.use_diff_drive);
+    params.rotate_while_moving    = declareOrGet<bool> (
+        node_handle, name + ".rotate_while_moving", params.rotate_while_moving);
+    params.rotate_while_moving_exponent = declareOrGet<double> (
+        node_handle, name + ".rotate_while_moving_exponent", params.rotate_while_moving_exponent);
 
     params.goal_checker.xy_tolerance  = declareOrGet<double> (
         node_handle, name + ".goal_xy_tolerance", params.goal_checker.xy_tolerance);
