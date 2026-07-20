@@ -104,7 +104,7 @@ def generate_launch_description() -> LaunchDescription:
                 # コントローラ側の max_speed_xy / max_speed_yaw
                 # (texnitis_mbf_highspeed.yaml) を飽和させない値に揃える。
                 "max_linear_speed": 2.5,
-                "max_angular_speed": 3.0,
+                "max_angular_speed": 4.0,
             },
         ],
     )

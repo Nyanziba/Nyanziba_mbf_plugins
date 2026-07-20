@@ -29,9 +29,9 @@ move_base_flex:
       type: "texnitis::mbf_controllers::LookaheadController"
       base_frame: base_link
       kp_xy: 2.0
-      kp_yaw: 2.0
+      kp_yaw: 3.0
       max_speed_xy: 2.0        # [m/s] 高速デモ。sim 側の max_linear_speed も揃えること
-      max_speed_yaw: 2.0       # [rad/s]
+      max_speed_yaw: 3.0       # [rad/s] sim 側の max_angular_speed も揃えること
       lookahead_dist: 1.0      # 高速でも経路先読みが破綻しないよう長め
       linear_threshold_for_wz: 0.01
       max_wz_when_moving: 0.0  # rotate_while_moving 時は不使用
