@@ -78,8 +78,30 @@ install(
 install(FILES plugins.xml DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
+    find_package(ament_cmake_gtest REQUIRED)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
+
+    ament_add_gtest(test_kinematic_time_astar_ros
+        test/test_kinematic_time_astar_ros.cpp
+    )
+    if(TARGET test_kinematic_time_astar_ros)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ros_test_logs")
+        target_link_libraries(test_kinematic_time_astar_ros
+            texnitis_mbf_planners
+        )
+        ament_target_dependencies(test_kinematic_time_astar_ros
+            rclcpp
+            geometry_msgs
+            nav_msgs
+            texnitis_mbf_common
+            texnitis_navigation_interfaces
+        )
+        set_tests_properties(test_kinematic_time_astar_ros PROPERTIES
+            ENVIRONMENT "ROS_LOG_DIR=${CMAKE_CURRENT_BINARY_DIR}/ros_test_logs"
+            TIMEOUT 60
+        )
+    endif()
 endif()
 
 ament_export_targets(texnitis_mbf_plannersTargets HAS_LIBRARY_TARGET)
