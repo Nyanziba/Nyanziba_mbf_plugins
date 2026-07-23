@@ -46,7 +46,7 @@ ros2 run texnitis_mbf_tools waypoint_sender.py --ros-args \
 ```bash
 ros2 run texnitis_mbf_tools waypoint_sender.py --ros-args \
     -p waypoints_file:=$PWD/waypoints.yaml \
-    -p planner:=heightaware -p controller:=mppi
+    -p planner:=kinematic_time -p controller:=mppi
 ```
 
 ## トラブルシュート

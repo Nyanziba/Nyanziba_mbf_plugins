@@ -1,0 +1,4 @@
+geometry_msgs/Pose pose
+geometry_msgs/Twist velocity
+geometry_msgs/Accel acceleration
+builtin_interfaces/Duration time_from_start

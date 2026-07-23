@@ -16,6 +16,7 @@
   <depend>tf2_ros</depend>
   <depend>mbf_msgs</depend>
   <depend>texnitis_nav_core</depend>
+  <depend>texnitis_navigation_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -11,7 +11,7 @@ move_base_flex:
     cmd_vel_ignored_tolerance: 0.0
     odom_topic: /odom
 
-    planners: ["astar"]
+    planners: ["astar", "kinematic_time"]
     controllers: ["lookahead"]
 
     astar:
@@ -24,6 +24,32 @@ move_base_flex:
       max_iterations: 0
       heuristic_weight: 1.0
       allow_diagonal: true
+
+    kinematic_time:
+      type: "texnitis::mbf_planners::KinematicTimeAStarPlanner"
+      map_topic: /map
+      terrain_topic: /terrain_grid
+      global_frame: map
+      motion_model: holonomic
+      missing_terrain_policy: allow_2d_only
+      heading_bins: 16
+      primitive_length: 0.30
+      inflation_radius: 0.30
+      max_velocity_x: 2.0
+      max_velocity_y: 2.0
+      max_acceleration_x: 4.0
+      max_acceleration_y: 4.0
+      max_angular_velocity: 3.0
+      max_angular_acceleration: 6.0
+      # Terrain direction/safety model. Measure these values on the actual robot.
+      uphill_speed_scale_per_grade: 1.5
+      downhill_speed_scale_per_grade: 0.25
+      minimum_terrain_speed_scale: 0.20
+      maximum_longitudinal_grade: 1.0
+      track_width: 0.50
+      center_of_gravity_height: 0.30
+      rollover_safety_factor: 0.80
+      require_valid_slope: false
 
     lookahead:
       type: "texnitis::mbf_controllers::LookaheadController"

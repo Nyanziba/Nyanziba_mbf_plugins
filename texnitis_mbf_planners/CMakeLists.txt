@@ -24,11 +24,12 @@ find_package(mbf_simple_core REQUIRED)
 find_package(mbf_msgs REQUIRED)
 find_package(mbf_utility REQUIRED)
 find_package(texnitis_mbf_common REQUIRED)
+find_package(texnitis_navigation_interfaces REQUIRED)
 find_package(texnitis_nav_core REQUIRED CONFIG)
 
 add_library(texnitis_mbf_planners SHARED
     src/astar_planner.cpp
-    src/height_aware_astar_planner.cpp
+    src/kinematic_time_astar_planner.cpp
 )
 
 target_include_directories(texnitis_mbf_planners
@@ -51,6 +52,7 @@ ament_target_dependencies(texnitis_mbf_planners
         mbf_msgs
         mbf_utility
         texnitis_mbf_common
+        texnitis_navigation_interfaces
 )
 
 target_link_libraries(texnitis_mbf_planners

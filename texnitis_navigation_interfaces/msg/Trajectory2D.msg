@@ -1,0 +1,2 @@
+std_msgs/Header header
+texnitis_navigation_interfaces/TrajectoryPoint2D[] points

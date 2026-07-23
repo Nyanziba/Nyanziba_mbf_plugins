@@ -57,11 +57,11 @@ texnitis_mbf_plugins/
 ├── texnitis_mbf_common/         ← まずここを把握
 │   ├── include/texnitis_mbf_common/
 │   │   ├── map_provider.hpp           ← /map 購読シングルトン
-│   │   ├── height_map_provider.hpp    ← /height_grid 購読シングルトン
+│   │   ├── terrain_map_provider.hpp   ← /terrain_grid 購読シングルトン
 │   │   ├── error_codes.hpp            ← outcome ↔ enum 対応表
 │   │   ├── pose_conversions.hpp       ← ROS 型 ↔ POD 型変換
 │   │   └── ros_logger_bridge.hpp      ← LoggerFn → rclcpp::Logger
-│   └── src/{map_provider,height_map_provider}.cpp
+│   └── src/{map_provider,terrain_map_provider}.cpp
 ├── texnitis_mbf_planners/       ← Planner アダプタ群
 ├── texnitis_mbf_controllers/    ← Controller アダプタ群
 ├── texnitis_mbf_bringup/        ← launch + yaml

@@ -20,6 +20,7 @@
   <depend>mbf_msgs</depend>
   <depend>mbf_utility</depend>
   <depend>texnitis_mbf_common</depend>
+  <depend>texnitis_navigation_interfaces</depend>
   <depend>texnitis_nav_core</depend>
 
   <test_depend>ament_lint_auto</test_depend>

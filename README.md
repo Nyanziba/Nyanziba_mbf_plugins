@@ -6,8 +6,13 @@ Ubuntu 24.04 / ROS 2 **Jazzy Jalisco** を想定。
 
 ## ハイライト
 
-- AStar / HeightAwareAStar / Lookahead / DiffDrivePurePursuit / MecanumMPPI
-  を mbf_simple_core の薄いアダプタとして提供
+- AStar / KinematicTimeAStar / Lookahead / DiffDrivePurePursuit / MecanumMPPI
+- KinematicTimeAStar（holonomic / differential-drive）と任意のTerrainGrid前処理
+
+`KinematicTimeAStarPlanner` は通常の `/map` (`nav_msgs/OccupancyGrid`) だけで動作する。
+任意の `/terrain_grid` (`texnitis_navigation_interfaces/TerrainGrid`) を追加すると、
+メートル単位のelevationと`dz/dx`, `dz/dy`から段差・傾斜を共通前処理する。
+これらを mbf_simple_core の薄いアダプタとして提供する。
 - アルゴリズム本体は ROS 非依存の [`Nyanziba/Nyanziba_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core)
   に分離（pluginlib `.so` は `find_package(texnitis_nav_core)` で PRIVATE link）
 - ヘッドレス 2D シミュレータと 1 ゴール E2E チェックを同梱
@@ -17,11 +22,11 @@ Ubuntu 24.04 / ROS 2 **Jazzy Jalisco** を想定。
 ## ディレクトリ
 
 ```text
-texnitis_mbf_planners/      # AStar / HeightAwareAStar の SimplePlanner アダプタ
+texnitis_mbf_planners/      # AStar / KinematicTimeAStar の SimplePlanner アダプタ
 texnitis_mbf_controllers/   # Lookahead / DiffDrivePP / MecanumMPPI のアダプタ
 texnitis_mbf_common/        # MapProvider, error_codes, ros_logger_bridge, conversions
 texnitis_mbf_bringup/       # launch / config
-texnitis_mbf_tools/         # waypoint_sender / nav_state_publisher / mbf_action_bridge
+texnitis_mbf_tools/         # waypoint sender / state publisher / planner benchmark
 texnitis_mbf_sim/           # ヘッドレス 2D sim + run_e2e_check + sim launch
 texnitis_mbf_webui/         # WebUI (HTML/JS) + rosbridge launch
 third_party/                # move_base_flex.repos / texnitis_nav_core.repos

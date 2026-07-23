@@ -87,8 +87,6 @@ private:
 <library path="texnitis_mbf_planners">
   <class type="texnitis::mbf_planners::AStarPlanner"
          base_class_type="mbf_simple_core::SimplePlanner">...</class>
-  <class type="texnitis::mbf_planners::HeightAwareAStarPlanner"
-         base_class_type="mbf_simple_core::SimplePlanner">...</class>
   <class type="texnitis::mbf_planners::HillClimbPlanner"
          base_class_type="mbf_simple_core::SimplePlanner">
     <description>Hill-climb planner that ...</description>
@@ -101,7 +99,6 @@ private:
 ```cmake
 add_library(texnitis_mbf_planners SHARED
     src/astar_planner.cpp
-    src/height_aware_astar_planner.cpp
     src/hill_climb_planner.cpp           # ← 追加
 )
 ```

@@ -18,6 +18,7 @@ install(PROGRAMS
     scripts/waypoint_sender.py
     scripts/mbf_action_bridge.py
     scripts/nav_state_publisher.py
+    scripts/planner_benchmark.py
     DESTINATION lib/${PROJECT_NAME}
 )
 

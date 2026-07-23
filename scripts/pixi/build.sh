@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Two-stage build: nav_core (plain cmake) then the rest of the workspace
-# (colcon). Re-using install_nav_core when present keeps warm builds fast.
+# (colcon). CMake's incremental build keeps warm builds fast while ensuring
+# changed nav_core headers and archives are always reinstalled for colcon.
 #
 # Sources scripts/pixi/activate.sh first so CC/CXX/SDKROOT and the conda
 # activate.d hooks are in place before cmake / colcon run, and rewrites
@@ -11,18 +12,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 # shellcheck source=./activate.sh
 source "${SCRIPT_DIR}/activate.sh"
 
-if [ ! -f install_nav_core/lib/libtexnitis_nav_core.a ]; then
-    cmake -S src/texnitis_nav_core -B build_nav_core \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DNAV_CORE_WITH_MPPI=OFF \
-        -DNAV_CORE_BUILD_PYTHON=OFF \
-        -DNAV_CORE_BUILD_TESTS=OFF \
-        -DCMAKE_INSTALL_PREFIX="$(pwd)/install_nav_core"
-    cmake --build build_nav_core -j
-    cmake --install build_nav_core
-else
-    echo "nav_core already installed; skipping"
-fi
+cmake -S src/texnitis_nav_core -B build_nav_core \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DNAV_CORE_WITH_MPPI=OFF \
+    -DNAV_CORE_BUILD_PYTHON=OFF \
+    -DNAV_CORE_BUILD_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX="$(pwd)/install_nav_core"
+cmake --build build_nav_core -j
+cmake --install build_nav_core
 
 export texnitis_nav_core_DIR="$(pwd)/install_nav_core/lib/cmake/texnitis_nav_core"
 export CMAKE_PREFIX_PATH="$(pwd)/install_nav_core:${CMAKE_PREFIX_PATH:-}"

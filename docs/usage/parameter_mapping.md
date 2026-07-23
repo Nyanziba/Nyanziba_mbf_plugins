@@ -17,17 +17,17 @@
 | `cmd_vel_topic` | mbf node 起動時の `--remap` |
 | `goal_pose_topic` | 廃止（mbf アクション or 自前 ActionClient へ） |
 
-## A\* / HeightAware A\* 系
+## A\* / KinematicTime A\* 系
 
 | 旧 yaml | 新 yaml (`<planner_name>.*`) |
 |---|---|
 | `occupied_threshold` | `occupied_threshold` |
 | `unknown_is_obstacle` | `unknown_is_obstacle` |
 | `inflation_radius` | `inflation_radius` |
-| `heading_bins` (HeightAware) | （現状未対応 — M9 以降） |
+| `heading_bins` | `heading_bins` (KinematicTime A*) |
 | `heading_weight` | （現状未対応） |
-| `height_lethal_threshold` | `height_lethal_threshold` |
-| `height_grid_topic` | `<planner_name>.height_topic` |
+| `height_lethal_threshold` | 廃止。TerrainGridと`max_step_height`を使用 |
+| `height_grid_topic` | 廃止。`<planner_name>.terrain_topic`を使用 |
 
 ## Lookahead Controller
 
