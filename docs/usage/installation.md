@@ -10,7 +10,6 @@ ROS 2 Jazzy + Ubuntu 24.04 をターゲットに、`texnitis_nav_core` と
 | OS | Ubuntu 24.04（推奨） / macOS + pixi global |
 | ROS | ROS 2 Jazzy Jalisco |
 | C++ | C++20 (GCC 13 / Apple Clang 15+) |
-| Eigen | 3.4 以降（MPPI を使うとき） |
 | CMake | 3.20 以降 |
 
 ## 1. ROS 2 環境を sourcing
@@ -52,7 +51,6 @@ CMake で個別にビルド・install する必要があります。
 ```bash
 cd ~/ros2_ws
 cmake -S src/texnitis_nav_core -B build/texnitis_nav_core \
-    -DNAV_CORE_WITH_MPPI=ON \
     -DNAV_CORE_BUILD_TESTS=OFF \
     -DCMAKE_INSTALL_PREFIX=$PWD/install/texnitis_nav_core
 cmake --build build/texnitis_nav_core -j --target install

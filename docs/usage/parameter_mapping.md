@@ -59,22 +59,10 @@
 | （新規）`lookahead_time` | 速度ベースの動的 lookahead [s] |
 | `pp_curvature_p` | （現状未対応 — M9 以降） |
 
-## Mecanum MPPI
-
-| 旧 mppi_plugins yaml | 新 yaml (`<controller_name>.*`) |
-|---|---|
-| `horizon` | `horizon` |
-| `num_samples` | `num_samples` |
-| `lambda` | `lambda` |
-| `sigma_ax` / `sigma_ay` / `sigma_alpha` | `sigma: [σx, σy, σα]` のリスト |
-| `u_max_*` | `u_max: [...]` のリスト |
-| `dt` | `dt` |
-| `seed` | `seed` |
-
 ## 完全な実例
 
 `texnitis_mbf_bringup/config/texnitis_mbf.yaml` を編集元として使うのが
-最短です。3 つの controller をすべて宣言して切替可能にする例:
+最短です。2 つの controller を宣言して切替可能にする例:
 
 ```yaml
 move_base_flex:
@@ -89,7 +77,6 @@ move_base_flex:
     controllers:
       - {name: lookahead, type: texnitis::mbf_controllers::LookaheadController}
       - {name: pursuit,   type: texnitis::mbf_controllers::DiffDrivePurePursuitController}
-      - {name: mppi,      type: texnitis::mbf_controllers::MecanumMppiController}
 
     astar:
       map_topic: /map
@@ -114,12 +101,6 @@ move_base_flex:
       max_lookahead_distance: 1.00
       goal_xy_tolerance: 0.06
 
-    mppi:
-      horizon: 25
-      num_samples: 256
-      lambda: 0.10
-      sigma: [0.30, 0.30, 0.40]
-      u_max: [1.50, 1.50, 1.50]
 ```
 
 mbf アクション送信時に `goal.controller = "pursuit"` を指定すれば

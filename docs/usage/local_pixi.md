@@ -59,7 +59,7 @@ pixi run test
 | `pixi install` が失敗（チャンネル解決） | RoboStack チャンネルが古い可能性。`pixi update` で再解決 |
 | `colcon build` が `find_package(mbf_simple_core)` で失敗 | `pixi run setup` を再実行して `src/move_base_flex` が消えていないか確認 |
 | 起動するが `outcome=58 (TF_ERROR)` | ホスト時計と launch 内の `use_sim_time` が噛み合っていない。`pixi run sim-e2e` を `--use_sim_time:=false` で（既定値） |
-| AppleSilicon でクラッシュ | RoboStack の osx-arm64 build に当該パッケージがあるか確認。無ければ条件付きで `pixi run sim-interactive --controller=lookahead` で MPPI を回避 |
+| AppleSilicon でクラッシュ | RoboStack の osx-arm64 build に当該パッケージがあるか確認 |
 | `UnsupportedTypeSupport: Could not import 'rosidl_typesupport_c' for package 'mbf_msgs'` | macOS SIP が `/usr/bin/env python3` shebang で `DYLD_LIBRARY_PATH` を strip するのが原因。`scripts/pixi/activate.sh` の `fix_shebangs` が自動で対処するので、`colcon build` を直接叩いた場合のみ手動で `fix_shebangs` を実行してください |
 | 終了時 `mbf_simple_nav_node ... exit code -11` | E2E PASS 判定後のシャットダウン時に発生する SEGV。launch shutdown 中のクリーンアップ順に起因し、E2E 結果には影響しません |
 

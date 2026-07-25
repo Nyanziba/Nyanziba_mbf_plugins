@@ -136,5 +136,5 @@ ros2 launch texnitis_mbf_webui webui.launch.py        # rosbridge + http.server
 - マップを差し替える: `nav2_map_server` の引数 `yaml_filename` を変える
   （`demo/maps/corridor.yaml` をベースに自作 YAML を用意）
 - planner / controller を切り替える: `MoveBase.Goal.planner / .controller` に
-  別の名前を入れる（例: `pursuit`, `mppi`、ただし `texnitis_mbf.yaml` の
+  別の名前を入れる（例: `pursuit`、ただし `texnitis_mbf.yaml` の
   `controllers:` リストにあらかじめ宣言しておく必要あり）

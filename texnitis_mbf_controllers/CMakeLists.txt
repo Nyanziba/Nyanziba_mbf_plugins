@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(texnitis_mbf_controllers CXX)
 
 # Milestone M3: LookaheadController adapter that delegates to
-# texnitis_nav_core. DiffDrivePurePursuit and MecanumMPPI follow in
-# milestones M4 and M5 respectively.
+# texnitis_nav_core. DiffDrivePurePursuit follows in milestone M4.
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,13 +11,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-# The MPPI controller links against texnitis_nav_core's mppi module, which is
-# only present when nav_core was built with NAV_CORE_WITH_MPPI=ON. Default to
-# ON to match the developer machine; CI / minimal builds pass -DBUILD_MPPI_CONTROLLER=OFF.
-option(BUILD_MPPI_CONTROLLER
-    "Build the MecanumMppiController adapter (requires nav_core mppi module)"
-    ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -39,13 +31,6 @@ set(controller_sources
     src/lookahead_controller.cpp
     src/diff_drive_pure_pursuit_controller.cpp
 )
-if(BUILD_MPPI_CONTROLLER)
-    list(APPEND controller_sources src/mecanum_mppi_controller.cpp)
-    set(_plugins_xml plugins.xml)
-else()
-    set(_plugins_xml plugins_no_mppi.xml)
-endif()
-
 add_library(texnitis_mbf_controllers SHARED ${controller_sources})
 
 target_include_directories(texnitis_mbf_controllers
@@ -75,7 +60,7 @@ target_link_libraries(texnitis_mbf_controllers
         texnitis_nav_core::texnitis_nav_core
 )
 
-pluginlib_export_plugin_description_file(mbf_simple_core ${_plugins_xml})
+pluginlib_export_plugin_description_file(mbf_simple_core plugins.xml)
 
 install(DIRECTORY include/
     DESTINATION include
@@ -90,7 +75,7 @@ install(
     INCLUDES DESTINATION include
 )
 
-install(FILES ${_plugins_xml} DESTINATION share/${PROJECT_NAME})
+install(FILES plugins.xml DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

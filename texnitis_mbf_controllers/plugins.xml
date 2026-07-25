@@ -19,14 +19,4 @@
       match the actuators.
     </description>
   </class>
-  <class type="texnitis::mbf_controllers::MecanumMppiController"
-         base_class_type="mbf_simple_core::SimpleController">
-    <description>
-      Sample-based MPPI on a mecanum kinematics model. Delegates to
-      texnitis_nav_core::mppi::MecanumMppiController. Configure
-      `&lt;name&gt;.horizon`, `num_samples`, `lambda`, and the per-axis
-      `sigma` / `u_max` arrays to tune the rollout. Eigen-only at the
-      moment; the CasADi-backed evaluator arrives in a follow-up.
-    </description>
-  </class>
 </library>

@@ -14,7 +14,6 @@ source "${SCRIPT_DIR}/activate.sh"
 
 cmake -S src/texnitis_nav_core -B build_nav_core \
     -DCMAKE_BUILD_TYPE=Release \
-    -DNAV_CORE_WITH_MPPI=OFF \
     -DNAV_CORE_BUILD_PYTHON=OFF \
     -DNAV_CORE_BUILD_TESTS=OFF \
     -DCMAKE_INSTALL_PREFIX="$(pwd)/install_nav_core"
@@ -29,7 +28,6 @@ export CMAKE_PREFIX_PATH="$(pwd)/install_nav_core:${CMAKE_PREFIX_PATH:-}"
 colcon build \
     --packages-up-to texnitis_mbf_sim mbf_simple_nav \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_MPPI_CONTROLLER=OFF \
     "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" \
     "-DPython3_ROOT_DIR=${Python3_ROOT_DIR}" \
     "-Dtexnitis_nav_core_DIR=$texnitis_nav_core_DIR"

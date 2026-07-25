@@ -6,7 +6,7 @@ Ubuntu 24.04 / ROS 2 **Jazzy Jalisco** を想定。
 
 ## ハイライト
 
-- AStar / KinematicTimeAStar / Lookahead / DiffDrivePurePursuit / MecanumMPPI
+- AStar / KinematicTimeAStar / Lookahead / DiffDrivePurePursuit
 - KinematicTimeAStar（holonomic / differential-drive）と任意のTerrainGrid前処理
 
 `KinematicTimeAStarPlanner` は通常の `/map` (`nav_msgs/OccupancyGrid`) だけで動作する。
@@ -23,7 +23,7 @@ Ubuntu 24.04 / ROS 2 **Jazzy Jalisco** を想定。
 
 ```text
 texnitis_mbf_planners/      # AStar / KinematicTimeAStar の SimplePlanner アダプタ
-texnitis_mbf_controllers/   # Lookahead / DiffDrivePP / MecanumMPPI のアダプタ
+texnitis_mbf_controllers/   # Lookahead / DiffDrivePP のアダプタ
 texnitis_mbf_common/        # MapProvider, error_codes, ros_logger_bridge, conversions
 texnitis_mbf_bringup/       # launch / config
 texnitis_mbf_tools/         # waypoint sender / state publisher / planner benchmark
@@ -48,8 +48,7 @@ vcs import < texnitis_mbf_plugins/third_party/move_base_flex.repos
 
 cd ~/ros2_ws
 rosdep install --from-paths src --ignore-src -r -y
-colcon build --packages-up-to texnitis_mbf_sim mbf_simple_nav \
-    --cmake-args -DBUILD_MPPI_CONTROLLER=OFF
+colcon build --packages-up-to texnitis_mbf_sim mbf_simple_nav
 source install/setup.bash
 
 # 1 ゴール E2E（成功なら exit 0）
@@ -146,7 +145,7 @@ pixi run sim-e2e    # 1 ゴール E2E（mbf_msgs typesupport の制約あり、D
 
 - ROS 2: Jazzy Jalisco
 - [`Nyanziba/Nyanziba_nav_core`](https://github.com/Nyanziba/Nyanziba_nav_core)
-  ROS 非依存のアルゴリズム本体（A\* / Lookahead / Pure Pursuit / MPPI）
+  ROS 非依存のアルゴリズム本体（A\* / Lookahead / Pure Pursuit）
 - [`naturerobots/move_base_flex`](https://github.com/naturerobots/move_base_flex)
   `ros2` ブランチ。SHA は [`third_party/move_base_flex.repos`](third_party/move_base_flex.repos) で固定
 
